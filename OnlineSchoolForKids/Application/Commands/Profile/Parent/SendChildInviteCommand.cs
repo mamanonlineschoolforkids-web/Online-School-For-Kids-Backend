@@ -1,10 +1,11 @@
-﻿using Application.Interfaces;
+﻿using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile;
+namespace Application.Commands.Profile.Parent;
 
 public class SendChildInviteCommand : IRequest<Unit>
 {

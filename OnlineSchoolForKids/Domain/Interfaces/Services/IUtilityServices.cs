@@ -1,23 +1,8 @@
-﻿using Domain.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Interfaces;
-
-public interface IJwtTokenService
-{
-    string GenerateAccessToken(User user);
-    string GenerateRefreshToken();
-    Task<RefreshToken> CreateRefreshTokenAsync(string userId, string token, string? ipAddress = null, string? deviceInfo = null);
-    Task<(string AccessToken, string RefreshToken)?> RefreshTokenAsync(string refreshToken, string? ipAddress = null);
-}
-
-public interface IPasswordHasher
-{
-    string HashPassword(string password);
-    bool VerifyPassword(string password, string passwordHash);
-}
+namespace Domain.Interfaces.Services;
 
 public interface IEmailService
 {
@@ -26,24 +11,10 @@ public interface IEmailService
     Task SendPasswordResetEmailAsync(string to, string userName, DateTime expiry, string resetLink, CancellationToken cancellationToken = default);
     Task SendPasswordChangedEmailAsync(string email);
     Task SendWelcomeEmailAsync(string to, string userName, CancellationToken cancellationToken = default);
-    
+
     /// Send parent-child link invitation
     Task SendParentLinkInvitationAsync(string childEmail, string childName, string parentName, string inviteToken, CancellationToken cancellationToken = default);
 
     /// Notify child that parent has linked their account
     Task SendParentLinkedNotificationAsync(string childEmail, string childName, string parentName, CancellationToken cancellationToken = default);
-}
-
-public interface IGoogleAuthService
-{
-    Task<GoogleUserInfo?> ValidateGoogleTokenAsync(string googleToken, CancellationToken cancellationToken = default);
-}
-
-public class GoogleUserInfo
-{
-    public string GoogleId { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string FullName { get; set; } = string.Empty;
-    public string? ProfilePictureUrl { get; set; }
-    public bool EmailVerified { get; set; }
 }

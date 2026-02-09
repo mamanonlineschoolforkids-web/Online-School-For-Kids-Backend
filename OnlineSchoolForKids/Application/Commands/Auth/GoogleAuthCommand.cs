@@ -1,13 +1,17 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace Application.Commands.Auth;
+
+public record GoogleAuthRequest(
+    string GoogleToken,
+    UserRole Role
+);
 
 public record GoogleAuthCommand(
     string GoogleToken,

@@ -1,7 +1,8 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -112,20 +113,17 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IJwtTokenService _jwtTokenService;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        IJwtTokenService jwtTokenService,
         IEmailService emailService,
         IConfiguration configuration)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
-        _jwtTokenService = jwtTokenService;
         _emailService = emailService;
         _configuration = configuration;
     }
@@ -158,7 +156,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Result<Au
         if (request.Role == UserRole.ContentCreator || request.Role == UserRole.Specialist)
         {
             user.Status = UserStatus.Pending;
-            user.Expertise.Add( request.Expertise);
+            user.Expertise = new ( ) { request.Expertise };
             user.PortfolioUrl = request.PortfolioUrl;
             user.CvLink = request.CvLink;
         }

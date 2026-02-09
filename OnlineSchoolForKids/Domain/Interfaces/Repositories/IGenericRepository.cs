@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text;
+﻿using System.Linq.Expressions;
 
-namespace Application.Interfaces;
+namespace Domain.Interfaces.Repositories;
 
 public interface IGenericRepository<T> where T : class
 {

@@ -1,5 +1,4 @@
 ﻿using Application.Commands.Auth;
-using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +22,6 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         var command = new RegisterCommand(
@@ -60,7 +58,6 @@ public class AuthController : ControllerBase
 
         return Ok(new { message = result.Data });
     }
-
 
 
     /// <summary>
@@ -246,24 +243,3 @@ public class AuthController : ControllerBase
     }
 
 }
-
-// Request DTOs
-// DTOs/Auth/RegisterRequest.cs
-
-
-public record LoginRequest(
-    string Email,
-    string Password,
-    bool RememberMe = false
-);
-
-public record GoogleAuthRequest(
-    string GoogleToken,
-    UserRole Role
-);
-
-public record RefreshTokenRequest(string RefreshToken);
-public record ForgotPasswordRequest(string Email);
-public record ResetPasswordRequest(string Token, string NewPassword, string ConfirmPassword);
-public record VerifyEmailRequest(string Token);
-public record ResendVerificationRequest(string Email);

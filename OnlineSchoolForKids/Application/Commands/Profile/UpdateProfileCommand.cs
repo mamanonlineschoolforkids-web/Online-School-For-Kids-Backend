@@ -1,12 +1,9 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs.Profile;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Interfaces.Repositories;
 using FluentValidation;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Application.Commands.Profile;
 
@@ -40,6 +37,60 @@ public class UpdateProfileCommand : IRequest<BaseProfileDto>
     public List<AvailabilitySlotDto>? Availability { get; set; }
 }
 
+
+public class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileCommand>
+{
+    public UpdateProfileCommandValidator()
+    {
+        RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("User ID is required");
+
+        When(x => !string.IsNullOrEmpty(x.FullName), () =>
+        {
+            RuleFor(x => x.FullName)
+                .MinimumLength(2).WithMessage("Full name must be at least 2 characters")
+                .MaximumLength(100).WithMessage("Full name cannot exceed 100 characters");
+        });
+
+        When(x => !string.IsNullOrEmpty(x.Phone), () =>
+        {
+            RuleFor(x => x.Phone)
+                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Invalid phone number format");
+        });
+
+        When(x => !string.IsNullOrEmpty(x.Country), () =>
+        {
+            RuleFor(x => x.Country)
+                .MinimumLength(2).WithMessage("Country must be at least 2 characters")
+                .MaximumLength(100).WithMessage("Country cannot exceed 100 characters");
+        });
+
+        When(x => !string.IsNullOrEmpty(x.Bio), () =>
+        {
+            RuleFor(x => x.Bio)
+                .MaximumLength(500).WithMessage("Bio cannot exceed 500 characters");
+        });
+
+        When(x => !string.IsNullOrEmpty(x.LearningGoals), () =>
+        {
+            RuleFor(x => x.LearningGoals)
+                .MaximumLength(1000).WithMessage("Learning goals cannot exceed 1000 characters");
+        });
+
+        When(x => x.HourlyRate.HasValue, () =>
+        {
+            RuleFor(x => x.HourlyRate)
+                .GreaterThanOrEqualTo(0).WithMessage("Hourly rate must be non-negative");
+        });
+
+        When(x => x.YearsOfExperience.HasValue, () =>
+        {
+            RuleFor(x => x.YearsOfExperience)
+                .GreaterThanOrEqualTo(0).WithMessage("Years of experience must be non-negative")
+                .LessThanOrEqualTo(100).WithMessage("Years of experience seems unrealistic");
+        });
+    }
+}
 
 public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, BaseProfileDto>
 {
@@ -160,57 +211,3 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
     
 }
 
-
-public class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileCommand>
-{
-    public UpdateProfileCommandValidator()
-    {
-        RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required");
-
-        When(x => !string.IsNullOrEmpty(x.FullName), () =>
-        {
-            RuleFor(x => x.FullName)
-                .MinimumLength(2).WithMessage("Full name must be at least 2 characters")
-                .MaximumLength(100).WithMessage("Full name cannot exceed 100 characters");
-        });
-
-        When(x => !string.IsNullOrEmpty(x.Phone), () =>
-        {
-            RuleFor(x => x.Phone)
-                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Invalid phone number format");
-        });
-
-        When(x => !string.IsNullOrEmpty(x.Country), () =>
-        {
-            RuleFor(x => x.Country)
-                .MinimumLength(2).WithMessage("Country must be at least 2 characters")
-                .MaximumLength(100).WithMessage("Country cannot exceed 100 characters");
-        });
-
-        When(x => !string.IsNullOrEmpty(x.Bio), () =>
-        {
-            RuleFor(x => x.Bio)
-                .MaximumLength(500).WithMessage("Bio cannot exceed 500 characters");
-        });
-
-        When(x => !string.IsNullOrEmpty(x.LearningGoals), () =>
-        {
-            RuleFor(x => x.LearningGoals)
-                .MaximumLength(1000).WithMessage("Learning goals cannot exceed 1000 characters");
-        });
-
-        When(x => x.HourlyRate.HasValue, () =>
-        {
-            RuleFor(x => x.HourlyRate)
-                .GreaterThanOrEqualTo(0).WithMessage("Hourly rate must be non-negative");
-        });
-
-        When(x => x.YearsOfExperience.HasValue, () =>
-        {
-            RuleFor(x => x.YearsOfExperience)
-                .GreaterThanOrEqualTo(0).WithMessage("Years of experience must be non-negative")
-                .LessThanOrEqualTo(100).WithMessage("Years of experience seems unrealistic");
-        });
-    }
-}

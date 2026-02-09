@@ -1,13 +1,14 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs.Profile;
 using Domain.Entities;
+using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile;
+namespace Application.Commands.Profile.Parent;
 
 public class CreateAndLinkChildCommand : IRequest<ChildDto>
 {

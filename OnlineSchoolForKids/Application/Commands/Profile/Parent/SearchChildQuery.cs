@@ -1,11 +1,11 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs.Profile;
+using Domain.Interfaces.Repositories;
 using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile;
+namespace Application.Commands.Profile.Parent;
 
 public class SearchChildQuery : IRequest<SearchChildDto>
 {
