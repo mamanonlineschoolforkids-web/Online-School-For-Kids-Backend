@@ -1,12 +1,12 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs;
+using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using MediatR;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Application.Commands.Auth;
+
+public record ForgotPasswordRequest(string Email);
 
 public record ForgotPasswordCommand(string Email) : IRequest<Result<string>>;
 

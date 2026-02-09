@@ -1,13 +1,9 @@
 ﻿using Application;
 using Application.Commands.Profile;
-using Application.Interfaces;
-using Application.Models;
-using Domain.Entities;
-using Domain.Enums;
-using Infrastructure.Repositories;
+using Application.DTOs.Profile;
+using Domain.Interfaces.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 

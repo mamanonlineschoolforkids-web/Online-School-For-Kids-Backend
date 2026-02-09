@@ -1,6 +1,5 @@
-﻿using Application.Interfaces;
+﻿using Domain.Interfaces.Services;
 using Infrastructure.Settings;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -8,7 +7,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
-using System.Threading;
 
 namespace Infrastructure.Services;
 
@@ -17,7 +15,7 @@ public class EmailService : IEmailService
     private readonly ILogger<EmailService> _logger;
     private readonly EmailSettings _emailSettings;
 
-    public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger )
+    public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger)
     {
         _emailSettings = emailSettings.Value;
         _logger = logger;
@@ -120,7 +118,7 @@ public class EmailService : IEmailService
         await SendEmailAsync(to, subject, body, true, cancellationToken);
     }
 
-    public async Task SendParentLinkInvitationAsync(string childEmail, string childName, string parentName, string inviteLink , CancellationToken cancellationToken = default)
+    public async Task SendParentLinkInvitationAsync(string childEmail, string childName, string parentName, string inviteLink, CancellationToken cancellationToken = default)
     {
         var subject = "Parent Invitation";
         var body = $@"
@@ -138,7 +136,7 @@ public class EmailService : IEmailService
         await SendEmailAsync(childEmail, subject, body, true, cancellationToken);
     }
 
-    public async Task SendParentLinkedNotificationAsync(string childEmail, string childName, string parentName , CancellationToken cancellationToken = default)
+    public async Task SendParentLinkedNotificationAsync(string childEmail, string childName, string parentName, CancellationToken cancellationToken = default)
     {
         var subject = "Student Invitation Acceptance";
         var body = $@"
@@ -154,4 +152,3 @@ public class EmailService : IEmailService
         await SendEmailAsync(childEmail, subject, body, true, cancellationToken);
     }
 }
-

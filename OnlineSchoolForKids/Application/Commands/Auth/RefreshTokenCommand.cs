@@ -1,11 +1,13 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs;
+using Domain.Interfaces.Services;
 using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Application.Commands.Auth;
+
+public record RefreshTokenRequest(string RefreshToken);
 
 public record RefreshTokenCommand(
     string RefreshToken,

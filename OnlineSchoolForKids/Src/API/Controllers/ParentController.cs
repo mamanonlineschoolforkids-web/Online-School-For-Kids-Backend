@@ -1,5 +1,6 @@
 ﻿using Application.Commands.Profile;
-using Application.Models;
+using Application.Commands.Profile.Parent;
+using Application.DTOs.Profile;
 using Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

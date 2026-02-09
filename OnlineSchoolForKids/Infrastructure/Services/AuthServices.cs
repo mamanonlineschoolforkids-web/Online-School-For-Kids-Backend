@@ -1,18 +1,95 @@
-﻿using Application.Interfaces;
-using Domain.Entities;
+﻿using Domain.Entities;
 using Domain.Enums;
+using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using Infrastructure.Settings;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Infrastructure.Services;
+
+public class BcryptPasswordHasher : IPasswordHasher
+{
+    public string HashPassword(string password)
+    {
+        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+    }
+
+    public bool VerifyPassword(string password, string passwordHash)
+    {
+        return BCrypt.Net.BCrypt.Verify(password, passwordHash);
+    }
+}
+
+public class GoogleAuthService : IGoogleAuthService
+{
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<GoogleAuthService> _logger;
+    private const string GoogleTokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo";
+
+    public GoogleAuthService(HttpClient httpClient, ILogger<GoogleAuthService> logger)
+    {
+        _httpClient = httpClient;
+        _logger = logger;
+    }
+
+    public async Task<GoogleUserInfo?> ValidateGoogleTokenAsync(
+        string googleToken,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"{GoogleTokenInfoUrl}?id_token={googleToken}",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Google token validation failed with status: {StatusCode}", response.StatusCode);
+                return null;
+            }
+
+            var tokenInfo = await response.Content.ReadFromJsonAsync<GoogleTokenResponse>(cancellationToken);
+
+            if (tokenInfo == null)
+            {
+                return null;
+            }
+
+            return new GoogleUserInfo
+            {
+                GoogleId = tokenInfo.Sub,
+                Email = tokenInfo.Email,
+                FullName = tokenInfo.Name ?? tokenInfo.Email,
+                ProfilePictureUrl = tokenInfo.Picture,
+                EmailVerified = tokenInfo.EmailVerified
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating Google token");
+            return null;
+        }
+    }
+
+    private class GoogleTokenResponse
+    {
+        public string Sub { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Name { get; set; }
+        public string? Picture { get; set; }
+        public bool EmailVerified { get; set; }
+    }
+}
+
 public class JwtTokenService : IJwtTokenService
 {
     private readonly JwtSettings _jwtSettings;
@@ -117,3 +194,5 @@ public class JwtTokenService : IJwtTokenService
         return (newAccessToken, newRefreshToken);
     }
 }
+
+

@@ -1,13 +1,77 @@
-﻿using System;
+﻿using Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace Application.Models;
+namespace Application.DTOs.Profile;
 
-// <summary>
-/// DTO for searching child by email
-/// </summary>
+public class ParentProfileDto : BaseProfileDto
+{
+    public int ChildrenCount { get; set; }
+    public bool ParentalControlsActive { get; set; }
+    public NotificationPreferences NotificationPreferences { get; set; }
+    public List<PaymentMethodDto> PaymentMethods { get; set; }
+}
+
+public class PaymentMethodDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty; // "card", "vodafone_cash", "instapay", "fawry", "bank_account"
+    public string DisplayInfo { get; set; } = string.Empty; // User-friendly display text
+    public bool IsDefault { get; set; }
+
+    // Legacy card fields (for backward compatibility)
+    public string? Last4 { get; set; }
+    public string? Brand { get; set; }
+    public int? ExpiryMonth { get; set; }
+    public int? ExpiryYear { get; set; }
+}
+
+public class ChildDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public int Age { get; set; }
+    public string? Avatar { get; set; } // For backward compatibility
+    public string? ProfilePictureUrl { get; set; }
+    public int Courses { get; set; }
+}
+
+public class AddChildDto
+{
+    public string Name { get; set; } = string.Empty;
+    public int Age { get; set; }
+    public string? Email { get; set; }
+}
+
+public class AddPaymentMethodDto
+{
+    public string Type { get; set; } = string.Empty; // "card", "vodafone_cash", "instapay", "fawry", "bank_account"
+
+    // Card fields (legacy/international)
+    public string? CardNumber { get; set; }
+    public int? ExpiryMonth { get; set; }
+    public int? ExpiryYear { get; set; }
+    public string? Cvc { get; set; }
+    public string? CardholderName { get; set; }
+
+    // Vodafone Cash
+    public string? PhoneNumber { get; set; }
+
+    // Instapay
+    public string? InstapayId { get; set; }
+
+    // Fawry
+    public string? ReferenceNumber { get; set; }
+
+    // Bank Account
+    public string? AccountHolderName { get; set; }
+    public string? BankName { get; set; }
+    public string? AccountNumber { get; set; }
+    public string? IBAN { get; set; }
+}
+
 public class SearchChildDto
 {
     public bool Exists { get; set; }
@@ -100,3 +164,4 @@ public class AchievementDto
     public string Icon { get; set; } = string.Empty;
     public DateTime EarnedAt { get; set; }
 }
+

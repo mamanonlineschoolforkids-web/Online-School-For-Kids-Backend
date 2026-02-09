@@ -1,11 +1,14 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs;
+using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Application.Commands.Auth;
+
+public record ResetPasswordRequest(string Token, string NewPassword, string ConfirmPassword);
 
 public record ResetPasswordCommand(
     string Token,

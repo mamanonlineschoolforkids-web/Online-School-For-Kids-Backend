@@ -1,13 +1,17 @@
-﻿using Application.Interfaces;
-using Application.Models;
+﻿using Application.DTOs;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Interfaces.Repositories;
+using Domain.Interfaces.Services;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Application.Commands.Auth;
+
+public record LoginRequest(
+    string Email,
+    string Password,
+    bool RememberMe = false
+);
 
 public record LoginCommand(
     string Email,
