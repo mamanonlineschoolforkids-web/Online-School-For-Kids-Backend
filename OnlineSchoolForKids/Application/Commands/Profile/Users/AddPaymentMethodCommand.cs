@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile.Parent;
+namespace Application.Commands.Profile.Users;
 
 public class AddPaymentMethodCommand : IRequest<PaymentMethodDto>
 {
@@ -48,17 +48,15 @@ public class AddPaymentMethodCommandHandler : IRequestHandler<AddPaymentMethodCo
 
     public async Task<PaymentMethodDto> Handle(AddPaymentMethodCommand request, CancellationToken cancellationToken)
     {
-        var parent = await _userRepository.GetByIdAsync(request.UserId);
-        if (parent == null)
-            throw new KeyNotFoundException("Parent not found");
+        var user = await _userRepository.GetByIdAsync(request.UserId);
+        if (user == null)
+            throw new KeyNotFoundException("user not found");
 
-        if (parent.Role != Domain.Enums.UserRole.Parent)
-            throw new UnauthorizedAccessException("User is not a parent");
 
         var paymentMethod = new PaymentMethod
         {
             Id = Guid.NewGuid().ToString(),
-            IsDefault = parent.PaymentMethods == null || !parent.PaymentMethods.Any(),
+            IsDefault = user.PaymentMethods == null || !user.PaymentMethods.Any(),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -94,12 +92,12 @@ public class AddPaymentMethodCommandHandler : IRequestHandler<AddPaymentMethodCo
                 throw new ArgumentException($"Unsupported payment type: {request.Type}");
         }
 
-        if (parent.PaymentMethods == null)
-            parent.PaymentMethods = new List<PaymentMethod>();
+        if (user.PaymentMethods == null)
+            user.PaymentMethods = new List<PaymentMethod>();
 
-        parent.PaymentMethods.Add(paymentMethod);
-        parent.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(parent.Id, parent);
+        user.PaymentMethods.Add(paymentMethod);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user.Id, user);
 
         return MapToDto(paymentMethod);
     }

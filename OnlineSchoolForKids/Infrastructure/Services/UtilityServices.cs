@@ -151,4 +151,129 @@ public class EmailService : IEmailService
 
         await SendEmailAsync(childEmail, subject, body, true, cancellationToken);
     }
+
+    public async Task SendParentLinkAcceptedNotificationAsync(
+    string parentEmail,
+    string parentName,
+    string childName,
+    string childProgressUrl)
+    {
+        var subject = $"{childName} accepted your parent link invitation!";
+
+        var body = $@"
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 30px;
+                    text-align: center;
+                    border-radius: 10px 10px 0 0;
+                }}
+                .content {{
+                    background: #f9fafb;
+                    padding: 30px;
+                    border-radius: 0 0 10px 10px;
+                }}
+                .success-badge {{
+                    background: #10b981;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    display: inline-block;
+                    margin: 20px 0;
+                    font-weight: bold;
+                }}
+                .button {{
+                    display: inline-block;
+                    background: #667eea;
+                    color: white;
+                    padding: 12px 30px;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin: 20px 0;
+                }}
+                .info-box {{
+                    background: #e0e7ff;
+                    border-left: 4px solid #667eea;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-radius: 5px;
+                }}
+                .footer {{
+                    text-align: center;
+                    color: #6b7280;
+                    font-size: 12px;
+                    margin-top: 30px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>🎉 Great News!</h1>
+                </div>
+                <div class='content'>
+                    <div class='success-badge'>✓ Account Linked Successfully</div>
+                    
+                    <p>Dear {parentName},</p>
+                    
+                    <p>
+                        We're excited to let you know that <strong>{childName}</strong> has accepted 
+                        your parent link invitation!
+                    </p>
+                    
+                    <div class='info-box'>
+                        <strong>What you can do now:</strong>
+                        <ul>
+                            <li>Monitor {childName}'s course progress and achievements</li>
+                            <li>View their learning statistics and study time</li>
+                            <li>Track their enrolled courses and completion status</li>
+                            <li>Support their educational journey</li>
+                        </ul>
+                    </div>
+                    
+                    <p style='text-align: center;'>
+                        <a href='{childProgressUrl}' class='button'>
+                            View {childName}'s Progress
+                        </a>
+                    </p>
+                    
+                    <p>
+                        You can access {childName}'s learning dashboard anytime from your parent profile 
+                        or by clicking the link above.
+                    </p>
+                    
+                    <p>
+                        Thank you for being an active part of {childName}'s learning journey!
+                    </p>
+                    
+                    <p>
+                        Best regards,<br>
+                        <strong>The EduPlatform Team</strong>
+                    </p>
+                </div>
+                
+                <div class='footer'>
+                    <p>This is an automated notification from EduPlatform.</p>
+                    <p>If you have any questions, please contact our support team.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    ";
+
+        await SendEmailAsync(parentEmail, subject, body);
+    }
 }

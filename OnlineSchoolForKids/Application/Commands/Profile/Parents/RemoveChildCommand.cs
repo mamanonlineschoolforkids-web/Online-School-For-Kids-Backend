@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile.Parent;
+namespace Application.Commands.Profile.Parents;
 
 public class RemoveChildCommand : IRequest<Unit>
 {

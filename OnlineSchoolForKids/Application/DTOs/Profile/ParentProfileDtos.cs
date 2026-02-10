@@ -9,9 +9,11 @@ namespace Application.DTOs.Profile;
 public class ParentProfileDto : BaseProfileDto
 {
     public int ChildrenCount { get; set; }
-    public bool ParentalControlsActive { get; set; }
-    public NotificationPreferences NotificationPreferences { get; set; }
-    public List<PaymentMethodDto> PaymentMethods { get; set; }
+    public string? LearningGoals { get; set; }
+    public int EnrolledCourses { get; set; }
+    public int Achievements { get; set; }
+    public int TotalHoursLearned { get; set; }
+
 }
 
 public class PaymentMethodDto

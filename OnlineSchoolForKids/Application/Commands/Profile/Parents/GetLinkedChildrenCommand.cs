@@ -5,14 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile.Parent;
+namespace Application.Commands.Profile.Parents;
 
-public class GetLinkedChildrenQuery : IRequest<List<ChildDto>>
+public class GetLinkedChildrenCommand : IRequest<List<ChildDto>>
 {
     public string UserId { get; set; } = string.Empty;
 }
 
-public class GetLinkedChildrenQueryHandler : IRequestHandler<GetLinkedChildrenQuery, List<ChildDto>>
+public class GetLinkedChildrenQueryHandler : IRequestHandler<GetLinkedChildrenCommand, List<ChildDto>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -21,7 +21,7 @@ public class GetLinkedChildrenQueryHandler : IRequestHandler<GetLinkedChildrenQu
         _userRepository = userRepository;
     }
 
-    public async Task<List<ChildDto>> Handle(GetLinkedChildrenQuery request, CancellationToken cancellationToken)
+    public async Task<List<ChildDto>> Handle(GetLinkedChildrenCommand request, CancellationToken cancellationToken)
     {
         var parent = await _userRepository.GetByIdAsync(request.UserId);
         if (parent == null)

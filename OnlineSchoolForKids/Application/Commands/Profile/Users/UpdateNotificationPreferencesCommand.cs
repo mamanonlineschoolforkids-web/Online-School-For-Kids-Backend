@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile.Parent;
+namespace Application.Commands.Profile.Users;
 
 public class UpdateNotificationPreferencesCommand : IRequest<NotificationPreferences>
 {
@@ -24,16 +24,13 @@ public class UpdateNotificationPreferencesCommandHandler : IRequestHandler<Updat
 
     public async Task<NotificationPreferences> Handle(UpdateNotificationPreferencesCommand request, CancellationToken cancellationToken)
     {
-        var parent = await _userRepository.GetByIdAsync(request.UserId);
-        if (parent == null)
-            throw new KeyNotFoundException("Parent not found");
+        var user = await _userRepository.GetByIdAsync(request.UserId);
+        if (user == null)
+            throw new KeyNotFoundException("user not found");
 
-        if (parent.Role != Domain.Enums.UserRole.Parent)
-            throw new UnauthorizedAccessException("User is not a parent");
-
-        parent.NotificationPreferences = request.Preferences;
-        parent.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(parent.Id, parent);
+        user.NotificationPreferences = request.Preferences;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user.Id, user);
 
         return request.Preferences;
     }

@@ -6,14 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile.Parent;
+namespace Application.Commands.Profile.Users;
 
-public class GetPaymentMethodsQuery : IRequest<List<PaymentMethodDto>>
+public class GetPaymentMethodsCommand : IRequest<List<PaymentMethodDto>>
 {
     public string UserId { get; set; } = string.Empty;
 }
 
-public class GetPaymentMethodsQueryHandler : IRequestHandler<GetPaymentMethodsQuery, List<PaymentMethodDto>>
+public class GetPaymentMethodsQueryHandler : IRequestHandler<GetPaymentMethodsCommand, List<PaymentMethodDto>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -22,16 +22,14 @@ public class GetPaymentMethodsQueryHandler : IRequestHandler<GetPaymentMethodsQu
         _userRepository = userRepository;
     }
 
-    public async Task<List<PaymentMethodDto>> Handle(GetPaymentMethodsQuery request, CancellationToken cancellationToken)
+    public async Task<List<PaymentMethodDto>> Handle(GetPaymentMethodsCommand request, CancellationToken cancellationToken)
     {
-        var parent = await _userRepository.GetByIdAsync(request.UserId);
-        if (parent == null)
+        var user = await _userRepository.GetByIdAsync(request.UserId);
+        if (user == null)
             throw new KeyNotFoundException("Parent not found");
 
-        if (parent.Role != Domain.Enums.UserRole.Parent)
-            throw new UnauthorizedAccessException("User is not a parent");
-
-        var paymentMethods = parent.PaymentMethods?.Select(pm => MapToDto(pm)).ToList()
+   
+        var paymentMethods = user.PaymentMethods?.Select(pm => MapToDto(pm)).ToList()
             ?? new List<PaymentMethodDto>();
 
         return paymentMethods;

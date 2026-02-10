@@ -14,6 +14,9 @@ public class BaseProfileDto
     public string Country { get; set; }
     public string? Bio { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public NotificationPreferences NotificationPreferences { get; set; }
+    public List<PaymentMethodDto> PaymentMethods { get; set; }
 }
 
 public class UpdateProfileDto
