@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces.Repositories;
 using Infrastructure.Data;
 using MongoDB.Driver;
@@ -47,5 +48,15 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             cancellationToken: cancellationToken);
 
         return count > 0;
+    }
+
+    public async Task<User?> GetByChildInviteTokenAsync(string token, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<User>.Filter.And(
+            Builders<User>.Filter.Eq(u => u.Role, UserRole.Parent),
+            Builders<User>.Filter.AnyEq(u => u.ChildInvitaions, token)
+        );
+
+        return await _collection.Find(filter).FirstOrDefaultAsync(cancellationToken);
     }
 }

@@ -1,11 +1,14 @@
-﻿using Domain.Interfaces.Repositories;
+﻿using Domain.Entities;
+using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Services;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace Application.Commands.Profile.Parent;
+namespace Application.Commands.Profile.Parents;
 
 public class SendChildInviteCommand : IRequest<Unit>
 {
@@ -16,14 +19,17 @@ public class SendChildInviteCommand : IRequest<Unit>
 public class SendChildInviteCommandHandler : IRequestHandler<SendChildInviteCommand, Unit>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IEmailService _emailService; // You'll need to implement this
+    private readonly IEmailService _emailService; 
+    private readonly IConfiguration _configuration;
 
     public SendChildInviteCommandHandler(
         IUserRepository userRepository,
-        IEmailService emailService)
+        IEmailService emailService,
+        IConfiguration configuration)
     {
         _userRepository = userRepository;
         _emailService = emailService;
+        _configuration=configuration;
     }
 
     public async Task<Unit> Handle(SendChildInviteCommand request, CancellationToken cancellationToken)
@@ -48,18 +54,24 @@ public class SendChildInviteCommandHandler : IRequestHandler<SendChildInviteComm
         if (!string.IsNullOrEmpty(child.ParentId) && child.ParentId != request.ParentUserId)
             throw new InvalidOperationException("This child is already linked to another parent");
 
-        // Create invitation token (you might want to store this in a separate table)
         var inviteToken = Guid.NewGuid().ToString();
 
-        // Store invitation (you'll need to create a ParentChildInvitation entity)
-        // For now, we'll send the email directly
+        if (parent.ChildInvitaions is not null)
+            parent.ChildInvitaions?.Add(inviteToken);
+        else
+            parent.ChildInvitaions = new() { inviteToken };
+
+
+            await _userRepository.UpdateAsync(parent.Id, parent, cancellationToken);
+
+        var verificationLink = $"{_configuration["FrontUrl"]}/student/accept-invite?token={inviteToken}";
 
         // Send invitation email
         await _emailService.SendParentLinkInvitationAsync(
             child.Email,
             child.FullName,
             parent.FullName,
-            inviteToken);
+            verificationLink);
 
         return Unit.Value;
     }

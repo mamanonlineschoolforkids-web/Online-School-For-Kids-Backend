@@ -5,15 +5,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Commands.Profile.Parent;
+namespace Application.Commands.Profile.Parents;
 
-public class SearchChildQuery : IRequest<SearchChildDto>
+public class SearchChildCommand : IRequest<SearchChildDto>
 {
     public string ParentUserId { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 }
 
-public class SearchChildQueryHandler : IRequestHandler<SearchChildQuery, SearchChildDto>
+public class SearchChildQueryHandler : IRequestHandler<SearchChildCommand, SearchChildDto>
 {
     private readonly IUserRepository _userRepository;
 
@@ -22,7 +22,7 @@ public class SearchChildQueryHandler : IRequestHandler<SearchChildQuery, SearchC
         _userRepository = userRepository;
     }
 
-    public async Task<SearchChildDto> Handle(SearchChildQuery request, CancellationToken cancellationToken)
+    public async Task<SearchChildDto> Handle(SearchChildCommand request, CancellationToken cancellationToken)
     {
         // Verify parent exists
         var parent = await _userRepository.GetByIdAsync(request.ParentUserId);

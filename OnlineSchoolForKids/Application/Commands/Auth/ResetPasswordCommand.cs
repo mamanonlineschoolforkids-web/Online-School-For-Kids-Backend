@@ -8,12 +8,11 @@ using System.Text;
 
 namespace Application.Commands.Auth;
 
-public record ResetPasswordRequest(string Token, string NewPassword, string ConfirmPassword);
+public record ResetPasswordRequest(string Token, string NewPassword);
 
 public record ResetPasswordCommand(
     string Token,
-    string NewPassword,
-    string ConfirmPassword
+    string Password
 ) : IRequest<Result<string>>;
 
 public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand, Result<string>>
@@ -34,11 +33,6 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
     public async Task<Result<string>> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
-        if (request.NewPassword != request.ConfirmPassword)
-        {
-            return Result<string>.Failure("Passwords do not match.");
-        }
-
         var user = await _userRepository.GetByPasswordResetTokenAsync(request.Token, cancellationToken);
 
         if (user == null || user.PasswordResetTokenExpiry == null || user.PasswordResetTokenExpiry < DateTime.UtcNow)
@@ -47,7 +41,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         }
 
         // Update password
-        user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+        user.PasswordHash = _passwordHasher.HashPassword(request.Password);
         user.PasswordResetToken = null;
         user.PasswordResetTokenExpiry = null;
         user.UpdatedAt = DateTime.UtcNow;

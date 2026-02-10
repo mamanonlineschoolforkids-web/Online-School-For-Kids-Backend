@@ -5,7 +5,7 @@ using Domain.Interfaces.Repositories;
 using FluentValidation;
 using MediatR;
 
-namespace Application.Commands.Profile;
+namespace Application.Commands.Profile.Users;
 
 public class UpdateProfileCommand : IRequest<BaseProfileDto>
 {
@@ -17,12 +17,8 @@ public class UpdateProfileCommand : IRequest<BaseProfileDto>
     public string? Country { get; set; }
     public string? Bio { get; set; }
 
-    // Student-specific
     public string? LearningGoals { get; set; }
 
-    // Parent-specific
-    public bool? ParentalControlsActive { get; set; }
-    public NotificationPreferences? NotificationPreferences { get; set; }
 
     // Content Creator-specific
     public List<string>? Expertise { get; set; }
@@ -165,11 +161,8 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
 
     private void UpdateParentFields(User user, UpdateProfileCommand request)
     {
-        if (request.ParentalControlsActive.HasValue)
-            user.ParentalControlsActive = request.ParentalControlsActive.Value;
-
-        if (request.NotificationPreferences != null)
-            user.NotificationPreferences = request.NotificationPreferences;
+        if (request.LearningGoals != null)
+            user.LearningGoals = request.LearningGoals.Trim();
     }
 
     private void UpdateContentCreatorFields(User user, UpdateProfileCommand request)

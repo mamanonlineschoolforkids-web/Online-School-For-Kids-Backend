@@ -133,8 +133,7 @@ public class AuthController : ControllerBase
     {
         var command = new ResetPasswordCommand(
             request.Token,
-            request.NewPassword,
-            request.ConfirmPassword
+            request.NewPassword
         );
 
         var result = await _mediator.Send(command);

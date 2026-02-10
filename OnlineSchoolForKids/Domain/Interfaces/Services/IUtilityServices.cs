@@ -15,6 +15,9 @@ public interface IEmailService
     /// Send parent-child link invitation
     Task SendParentLinkInvitationAsync(string childEmail, string childName, string parentName, string inviteToken, CancellationToken cancellationToken = default);
 
-    /// Notify child that parent has linked their account
-    Task SendParentLinkedNotificationAsync(string childEmail, string childName, string parentName, CancellationToken cancellationToken = default);
+    Task SendParentLinkAcceptedNotificationAsync(
+        string parentEmail,
+        string parentName,
+        string childName,
+        string childProgressUrl);
 }
