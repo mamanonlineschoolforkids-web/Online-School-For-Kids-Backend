@@ -37,6 +37,7 @@ public class User : BaseEntity
 
 
     // Parent , Student-specific fields
+    public string? ParentId { get; set; }
     public string? LearningGoals { get; set; }
     public List<string>? EnrolledCourseIds { get; set; } 
     public List<string>? AchievementIds { get; set; } 
@@ -44,14 +45,14 @@ public class User : BaseEntity
 
 
     // Parent-specific fields
-    public string? ParentId { get; set; }
 
     public List<string>? ChildrenIds { get; set; }
+    public List<string>? ChildInvitaions { get; set; }
 
-    public bool? ParentalControlsActive { get; set; } 
     public NotificationPreferences? NotificationPreferences { get; set; } 
 
     public List<PaymentMethod>? PaymentMethods { get; set; }
+
 
 
     // Content Creator specific fields

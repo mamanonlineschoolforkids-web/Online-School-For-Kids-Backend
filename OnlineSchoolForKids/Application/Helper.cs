@@ -34,9 +34,17 @@ public class Helper
                 Bio = user.Bio,
                 CreatedAt = user.CreatedAt,
                 LearningGoals = user.LearningGoals,
-                EnrolledCourses = user.EnrolledCourseIds?.Count ?? 0,
-                Achievements = user.AchievementIds?.Count ?? 0,
-                TotalHoursLearned = user.TotalHoursLearned ?? 0
+                //EnrolledCourses = user.EnrolledCourseIds?.Count ?? 0,
+                //Achievements = user.AchievementIds?.Count ?? 0,
+                TotalHoursLearned = user.TotalHoursLearned ?? 0,
+            //    PaymentMethods = user.PaymentMethods?.Select(p => new PaymentMethodDto
+            //    {
+            //        Id = p.Id,
+            //        Last4 = p.Last4,
+            //        Brand = p.Brand,
+            //        IsDefault = p.IsDefault
+            //    })?.ToList() ?? new(),
+            //    NotificationPreferences = user.NotificationPreferences ?? new()
             },
 
             UserRole.Parent => new ParentProfileDto
@@ -50,16 +58,19 @@ public class Helper
                 Country = user.Country,
                 Bio = user.Bio,
                 CreatedAt = user.CreatedAt,
+                LearningGoals = user.LearningGoals,
+                //EnrolledCourses = user.EnrolledCourseIds?.Count ?? 0,
+                //Achievements = user.AchievementIds?.Count ?? 0,
+                TotalHoursLearned = user.TotalHoursLearned ?? 0,
                 ChildrenCount = user.ChildrenIds?.Count ?? 0,
-                ParentalControlsActive = user.ParentalControlsActive ?? false,
-                NotificationPreferences = user.NotificationPreferences ?? new(),
-                PaymentMethods = user.PaymentMethods?.Select(p => new PaymentMethodDto
-                {
-                    Id = p.Id,
-                    Last4 = p.Last4,
-                    Brand = p.Brand,
-                    IsDefault = p.IsDefault
-                })?.ToList() ?? new()
+                //NotificationPreferences = user.NotificationPreferences ?? new(),
+                //PaymentMethods = user.PaymentMethods?.Select(p => new PaymentMethodDto
+                //{
+                //    Id = p.Id,
+                //    Last4 = p.Last4,
+                //    Brand = p.Brand,
+                //    IsDefault = p.IsDefault
+                //})?.ToList() ?? new()
             },
 
             UserRole.ContentCreator => new ContentCreatorProfileDto
@@ -80,7 +91,16 @@ public class Helper
                 TotalRevenue = user.TotalRevenue ?? 0,
                 AverageRating = user.AverageRating ?? 0,
                 SocialLinks = user.SocialLinks,
-                PayoutSettings = user.PayoutSettings
+                PayoutSettings = user.PayoutSettings,
+                PaymentMethods = user.PaymentMethods?.Select(p => new PaymentMethodDto
+                {
+                    Id = p.Id,
+                    Last4 = p.Last4,
+                    Brand = p.Brand,
+                    IsDefault = p.IsDefault
+                })?.ToList() ?? new(),
+                NotificationPreferences = user.NotificationPreferences ?? new()
+
             },
 
             UserRole.Specialist => new SpecialistProfileDto
@@ -113,7 +133,15 @@ public class Helper
                 HourlyRate = user.HourlyRate ?? 100,
                 SessionRates = user.SessionRates,
                 Rating = user.AverageRating ?? 0,
-                StudentsHelped = user.TotalStudents ?? 0
+                StudentsHelped = user.TotalStudents ?? 0,
+                PaymentMethods = user.PaymentMethods?.Select(p => new PaymentMethodDto
+                {
+                    Id = p.Id,
+                    Last4 = p.Last4,
+                    Brand = p.Brand,
+                    IsDefault = p.IsDefault
+                })?.ToList() ?? new(),
+                NotificationPreferences = user.NotificationPreferences ?? new()
             },
 
             _ => new BaseProfileDto

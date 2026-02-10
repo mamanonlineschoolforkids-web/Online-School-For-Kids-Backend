@@ -12,3 +12,19 @@ public class StudentProfileDto : BaseProfileDto
     public int TotalHoursLearned { get; set; }
 }
 
+
+
+public class AcceptParentInviteDto
+{
+    public string Message { get; set; } = string.Empty;
+    public string ParentName { get; set; } = string.Empty;
+}
+
+public class ParentInfoDto
+{
+    public string ParentId { get; set; } = string.Empty;
+    public string ParentName { get; set; } = string.Empty;
+    public string ParentEmail { get; set; } = string.Empty;
+    public string? ParentProfilePictureUrl { get; set; }
+    public DateTime? LinkedSince { get; set; }
+}
