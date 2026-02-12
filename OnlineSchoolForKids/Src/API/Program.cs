@@ -3,6 +3,7 @@ using Application;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -65,8 +66,21 @@ builder.Services.AddCors(options =>
                 ?? new[] { "http://localhost:8080" })
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials();
+            .AllowCredentials()
+         .WithExposedHeaders("Content-Disposition");
     });
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB max
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
 });
 
 // Health checks
@@ -91,7 +105,8 @@ app.UseRateLimiting(requestLimit: 100, timeWindowSeconds: 60);
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
-// CRITICAL: Authentication must come before Authorization
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

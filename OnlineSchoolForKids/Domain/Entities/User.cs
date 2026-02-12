@@ -30,6 +30,10 @@ public class User : BaseEntity
     public string? GoogleId { get; set; }
     public DateTime? LastLoginAt { get; set; }
 
+    public NotificationPreferences? NotificationPreferences { get; set; }
+    public List<PaymentMethod>? PaymentMethods { get; set; }
+
+
 
     // creator , specialist register data
     public string? PortfolioUrl { get; set; }
@@ -49,11 +53,7 @@ public class User : BaseEntity
     public List<string>? ChildrenIds { get; set; }
     public List<string>? ChildInvitaions { get; set; }
 
-    public NotificationPreferences? NotificationPreferences { get; set; } 
-
-    public List<PaymentMethod>? PaymentMethods { get; set; }
-
-
+    public Dictionary<string, NotificationPreferences>? ChildNotificationPreferences { get; set; }
 
     // Content Creator specific fields
     public bool? IsVerifiedCreator { get; set; } 

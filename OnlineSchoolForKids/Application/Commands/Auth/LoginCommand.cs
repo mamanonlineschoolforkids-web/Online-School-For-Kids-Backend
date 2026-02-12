@@ -56,7 +56,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
         // Check if account is active
         if (user.Status != UserStatus.Active)
         {
-            return Result<AuthResponse>.Failure("Account is deactivated. Please contact support.");
+            return Result<AuthResponse>.Failure("Account is deactivated or not approved. Please contact support.");
         }
 
         if (!user.EmailVerified)

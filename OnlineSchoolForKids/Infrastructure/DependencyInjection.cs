@@ -53,6 +53,9 @@ public static class DependencyInjection
         // HTTP Client for Google Auth
         services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
 
+        services.AddScoped<IFileStorageService, FileStorageService>();
+
+
         // JWT Authentication
         var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
