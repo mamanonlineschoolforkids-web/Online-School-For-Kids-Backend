@@ -2,7 +2,7 @@
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Domain.Entities;
-[BsonIgnoreExtraElements]
+
 public class User : BaseEntity
 {
     public string FullName { get; set; } = string.Empty;
@@ -11,7 +11,6 @@ public class User : BaseEntity
     public bool EmailVerified { get; set; } = false;
     public string? EmailVerificationToken { get; set; }
     public DateTime? EmailVerificationTokenExpiry { get; set; }
-
 
     public string? PasswordHash { get; set; }
     public string? PasswordResetToken { get; set; }

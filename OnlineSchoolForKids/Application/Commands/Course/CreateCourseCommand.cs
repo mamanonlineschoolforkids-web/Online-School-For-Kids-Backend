@@ -17,7 +17,7 @@ namespace Application.Commands
         public int DurationHours { get; set; }
         public string ThumbnailUrl { get; set; } = string.Empty;
         public string Language { get; set; } = "English";
-        public string InstructorId { get; set; } = string.Empty;
+        
     }
 
 

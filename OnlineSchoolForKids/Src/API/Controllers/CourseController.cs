@@ -10,6 +10,7 @@ namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CourseController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -25,8 +26,8 @@ namespace API.Controllers
         {
             try
             {
-                //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //query.UserId = userId;
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                query.UserId = userId;
 
                 var result = await _mediator.Send(query);
                 return Ok(new { data = result, success = true });

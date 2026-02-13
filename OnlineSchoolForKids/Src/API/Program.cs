@@ -9,10 +9,8 @@ using Infrastructure;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Microsoft.OpenApi.Models;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using StackExchange.Redis;
 using CourseEntity=Domain.Entities.Course;
 
 
@@ -96,10 +94,20 @@ builder.Services.AddMediatR(cfg =>
 });
 builder.Services.AddAutoMapper(typeof(CourseMappingProfile).Assembly);
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IMongoCollection<CartItem>>(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    var database = client.GetDatabase("Dev"); 
+    return database.GetCollection<CartItem>("CartItems");
+});
+builder.Services.AddSingleton<IConnectionMultiplexer>((serviveProvider) =>  
+{
+    var connection = builder.Configuration.GetConnectionString("Redis");  
+    return ConnectionMultiplexer.Connect(connection);    
+});
 
 
-
-
+builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 // CORS
 builder.Services.AddCors(options =>

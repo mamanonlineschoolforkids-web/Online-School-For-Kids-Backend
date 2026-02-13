@@ -11,25 +11,27 @@ namespace EduPlatform.Application.Commands.CreateCourse
     public class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, CourseDto>
     {
         private readonly IGenericRepository<CourseEntity> _courseRepo;
+        private readonly IUserRepository _userRepo;
 
-        public CreateCourseCommandHandler( IGenericRepository<CourseEntity> courseRepo)
+        public CreateCourseCommandHandler( IGenericRepository<CourseEntity> courseRepo,IUserRepository userRepo)
         {
             _courseRepo = courseRepo;
+            _userRepo = userRepo;
         }
 
         public async Task<CourseDto> Handle(CreateCourseCommand request, CancellationToken cancellationToken)
         {
-            //var instructor = await _unitOfWork.Instructors.FindAsync(i => i.UserId == request.InstructorId);
+            var instructor = await _userRepo.GetByIdAsync(request.CreatorId);
 
-            //if (!instructor.Any())
-            //    throw new UnauthorizedAccessException("User is not an instructor");
+            if (instructor == null)
+                throw new UnauthorizedAccessException("User is not an instructor");
 
             var course = new Course
             {
                 Id = Guid.NewGuid().ToString(),
                 Title = request.Title,
                 Description = request.Description,
-                //InstructorId = request.CreatorId,
+                InstructorId = request.CreatorId,
                 CategoryId = request.CategoryId,
                 Level = request.Level,
                 Price = request.Price,
@@ -48,17 +50,17 @@ namespace EduPlatform.Application.Commands.CreateCourse
             await _courseRepo.CreateAsync(course);
 
 
-            return MapToCourseDto(course);
+            return MapToCourseDto(course, instructor);
         }
 
-        private CourseDto MapToCourseDto(Course course)
+        private CourseDto MapToCourseDto(Course course,User instructor)
         {
             return new CourseDto
             {
                 Id = course.Id,
                 Title = course.Title,
                 Description = course.Description,
-                //InstructorName = course.Instructor?.User?.FullName ?? "Unknown",
+                InstructorName = instructor?.FullName ?? "Unknown",
                 InstructorId = course.InstructorId,
                 CategoryName = course.Category?.Name ?? "Unknown",
                 CategoryId = course.CategoryId,
