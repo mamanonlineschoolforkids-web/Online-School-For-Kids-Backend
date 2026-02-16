@@ -1,10 +1,8 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces.Repositories;
 using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
+
 
 namespace Infrastructure.Repositories;
 
@@ -16,14 +14,21 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     {
         _collection = collection;
     }
+    public async Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
+    {
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.UtcNow;
 
+        await _collection.InsertOneAsync(entity, cancellationToken: cancellationToken);
+        return entity;
+    }
     public async Task<T?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         return await _collection
             .Find(e => e.Id == id && !e.IsDeleted)
             .FirstOrDefaultAsync(cancellationToken);
     }
-
+ 
     public async Task<T?> GetOneAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
     {
         var deletedFilter = Builders<T>.Filter.Eq(e => e.IsDeleted, false);
@@ -33,7 +38,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
             .Find(combinedFilter)
             .FirstOrDefaultAsync(cancellationToken);
     }
-
+   
     public async Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? filter = null,
         CancellationToken cancellationToken = default)
@@ -49,14 +54,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
-    {
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
-
-        await _collection.InsertOneAsync(entity, cancellationToken: cancellationToken);
-        return entity;
-    }
+    
 
     public async Task<bool> UpdateAsync(string id, T entity, CancellationToken cancellationToken = default)
     {
