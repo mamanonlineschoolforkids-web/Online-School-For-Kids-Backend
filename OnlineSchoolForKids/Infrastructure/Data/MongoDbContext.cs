@@ -115,6 +115,7 @@ public class MongoDbContext
         await coursesCollection.InsertManyAsync(new[] { aspNetCourse, reactNativeCourse });
     }
 
+    public IMongoCollection<Payout> Payouts => _database.GetCollection<Payout>("payouts");
     private void CreateIndexes()
     {
         // User indexes

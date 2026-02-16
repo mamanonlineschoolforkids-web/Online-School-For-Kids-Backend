@@ -247,7 +247,90 @@ public class ParentController : ControllerBase
         }
     }
 
-    
+    /// <summary>
+    /// Get notification preferences for a specific child
+    /// </summary>
+    /// <param name="childId">Child user ID</param>
+    /// <returns>Notification preferences for the child</returns>
+    [HttpGet("children/{childId}/notifications")]
+    [ProducesResponseType(typeof(NotificationPreferences), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetChildNotificationPreferences(string childId)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var query = new GetChildNotificationPreferencesCommand
+            {
+                ParentUserId = userId,
+                ChildId = childId
+            };
+
+            var preferences = await _mediator.Send(query);
+            return Ok(preferences);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Update notification preferences for a specific child
+    /// </summary>
+    /// <param name="childId">Child user ID</param>
+    /// <param name="preferences">Updated notification preferences</param>
+    /// <returns>Updated notification preferences</returns>
+    [HttpPut("children/{childId}/notifications")]
+    [ProducesResponseType(typeof(NotificationPreferences), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateChildNotificationPreferences(
+        string childId,
+        [FromBody] NotificationPreferences preferences)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var command = new UpdateChildNotificationPreferencesCommand
+            {
+                ParentUserId = userId,
+                ChildId = childId,
+                Preferences = preferences
+            };
+
+            var updatedPreferences = await _mediator.Send(command);
+            return Ok(updatedPreferences);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
 
 

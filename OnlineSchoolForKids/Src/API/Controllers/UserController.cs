@@ -1,6 +1,4 @@
 ﻿using Application;
-using Application.Commands.Profile;
-using Application.Commands.Profile.Parents;
 using Application.Commands.Profile.Users;
 using Application.DTOs.Profile;
 using Domain.Entities;
@@ -64,14 +62,9 @@ public class UserController : ControllerBase
             Country = updateDto.Country,
             Bio = updateDto.Bio,
             LearningGoals = updateDto.LearningGoals,
-            Expertise = updateDto.Expertise,
-            SocialLinks = updateDto.SocialLinks,
+            ExpertiseTags = updateDto.ExpertiseTags,
             ProfessionalTitle = updateDto.ProfessionalTitle,
-            Specializations = updateDto.Specializations,
             YearsOfExperience = updateDto.YearsOfExperience,
-            HourlyRate = updateDto.HourlyRate,
-            SessionRates = updateDto.SessionRates,
-            Availability = updateDto.Availability
         };
 
         try
@@ -103,7 +96,7 @@ public class UserController : ControllerBase
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null) return Unauthorized();
 
-            var query = new GetNotificationPreferencesCommand{ UserId = userId };
+            var query = new GetNotificationPreferencesCommand { UserId = userId };
             var preferences = await _mediator.Send(query);
 
             return Ok(preferences);
@@ -314,12 +307,210 @@ public class UserController : ControllerBase
             return Forbid();
         }
     }
+
+
+    /// <summary>
+    /// Upload profile picture
+    /// </summary>
+    /// <param name="profilePicture">Image file (max 5MB, supported formats: jpg, jpeg, png, gif, webp)</param>
+    /// <returns>Profile picture URL</returns>
+    [HttpPost("profile-picture")]
+    [ProducesResponseType(typeof(UploadProfilePictureDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [RequestSizeLimit(5 * 1024 * 1024)] // 5MB limit
+    public async Task<IActionResult> UploadProfilePicture([FromForm] IFormFile profilePicture)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var command = new UploadProfilePictureCommand
+            {
+                UserId = userId,
+                File = profilePicture
+            };
+
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while uploading the profile picture" });
+        }
+    }
+
+    /// <summary>
+    /// Delete profile picture
+    /// </summary>
+    /// <returns>Success message</returns>
+    [HttpDelete("profile-picture")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteProfilePicture()
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
+
+            var command = new DeleteProfilePictureCommand
+            {
+                UserId = userId
+            };
+
+            await _mediator.Send(command);
+            return Ok(new { message = "Profile picture deleted successfully" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    ///// <summary>
+    ///// Add a social link
+    ///// </summary>
+    //[HttpPost("social-links")]
+    //[ProducesResponseType(typeof(SocialLinkDto), StatusCodes.Status201Created)]
+    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    //[ProducesResponseType(StatusCodes.Status404NotFound)]
+    //public async Task<IActionResult> AddSocialLink([FromBody] AddSocialLinkDto dto)
+    //{
+    //    try
+    //    {
+    //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    //        if (userId == null) return Unauthorized();
+
+    //        var command = new AddSocialLinkCommand
+    //        {
+    //            UserId = userId,
+    //            Name = dto.Name,
+    //            Value = dto.Value
+    //        };
+
+    //        var result = await _mediator.Send(command);
+    //        return CreatedAtAction(nameof(GetSocialLinks), result);
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(new { message = ex.Message });
+    //    }
+    //    catch (ArgumentException ex)
+    //    {
+    //        return BadRequest(new { message = ex.Message });
+    //    }
+    //}
+
+    ///// <summary>
+    ///// Update a social link
+    ///// </summary>
+    //[HttpPut("social-links/{linkId}")]
+    //[ProducesResponseType(typeof(SocialLinkDto), StatusCodes.Status200OK)]
+    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    //[ProducesResponseType(StatusCodes.Status403Forbidden)]
+    //[ProducesResponseType(StatusCodes.Status404NotFound)]
+    //public async Task<IActionResult> UpdateSocialLink(string linkId, [FromBody] UpdateSocialLinkDto dto)
+    //{
+    //    try
+    //    {
+    //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    //        if (userId == null) return Unauthorized();
+
+    //        var command = new UpdateSocialLinkCommand
+    //        {
+    //            UserId = userId,
+    //            LinkId = linkId,
+    //            Name = dto.Name,
+    //            Value = dto.Value
+    //        };
+
+    //        var result = await _mediator.Send(command);
+    //        return Ok(result);
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(new { message = ex.Message });
+    //    }
+    //    catch (UnauthorizedAccessException)
+    //    {
+    //        return Forbid();
+    //    }
+    //    catch (ArgumentException ex)
+    //    {
+    //        return BadRequest(new { message = ex.Message });
+    //    }
+    //}
+
+    ///// <summary>
+    ///// Delete a social link
+    ///// </summary>
+    //[HttpDelete("social-links/{linkId}")]
+    //[ProducesResponseType(StatusCodes.Status204NoContent)]
+    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    //[ProducesResponseType(StatusCodes.Status403Forbidden)]
+    //[ProducesResponseType(StatusCodes.Status404NotFound)]
+    //public async Task<IActionResult> DeleteSocialLink(string linkId)
+    //{
+    //    try
+    //    {
+    //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    //        if (userId == null) return Unauthorized();
+
+    //        var command = new DeleteSocialLinkCommand
+    //        {
+    //            UserId = userId,
+    //            LinkId = linkId
+    //        };
+
+    //        await _mediator.Send(command);
+    //        return NoContent();
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(new { message = ex.Message });
+    //    }
+    //    catch (UnauthorizedAccessException)
+    //    {
+    //        return Forbid();
+    //    }
+    //}
+
+    ///// <summary>
+    ///// Get public profile information for a user (no authentication required)
+    ///// </summary>
+    //[HttpGet("{userId}/public-profile")]
+    //[AllowAnonymous]
+    //[ProducesResponseType(typeof(PublicProfileDto), StatusCodes.Status200OK)]
+    //[ProducesResponseType(StatusCodes.Status404NotFound)]
+    //public async Task<IActionResult> GetPublicProfile(string userId)
+    //{
+    //    try
+    //    {
+    //        var query = new GetPublicProfileCommand
+    //        {
+    //            UserId = userId
+    //        };
+
+    //        var result = await _mediator.Send(query);
+    //        return Ok(result);
+    //    }
+    //    catch (KeyNotFoundException ex)
+    //    {
+    //        return NotFound(new { message = ex.Message });
+    //    }
+    //}
 }
-
-
-    
-
-
-
-
- 

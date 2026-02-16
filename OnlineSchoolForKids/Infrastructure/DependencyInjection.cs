@@ -39,6 +39,8 @@ public static class DependencyInjection
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IPayoutRepository, PayoutRepository>();
+
 
         // Authentication Services
         services.Configure<JwtSettings>(
@@ -52,6 +54,9 @@ public static class DependencyInjection
 
         // HTTP Client for Google Auth
         services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
+
+        services.AddScoped<IFileStorageService, FileStorageService>();
+
 
         // JWT Authentication
         var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();

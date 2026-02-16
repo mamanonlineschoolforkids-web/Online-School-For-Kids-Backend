@@ -69,3 +69,11 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Uploaded files - don't commit user uploads to git
+wwwroot/uploads/
+Uploads/
+
+# But keep the directory structure
+!wwwroot/uploads/.gitkeep
+!Uploads/.gitkeep

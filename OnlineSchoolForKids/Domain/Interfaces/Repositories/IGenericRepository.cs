@@ -12,5 +12,14 @@ public interface IGenericRepository<T> where T : class
     Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
     Task<long> CountAsync(Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default);
-    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
+
+
+    // Add these for pagination and sorting
+    Task<(IEnumerable<T> Items, long TotalCount)> GetPagedAsync(
+        Expression<Func<T, bool>>? filter = null,
+        Expression<Func<T, object>>? orderBy = null,
+        bool orderByDescending = false,
+        int? skip = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default);
 }
