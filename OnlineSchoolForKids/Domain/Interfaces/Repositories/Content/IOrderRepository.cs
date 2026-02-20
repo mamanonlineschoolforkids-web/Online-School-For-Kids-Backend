@@ -55,7 +55,7 @@ namespace Domain.Interfaces.Repositories.Content
         Task<int> GetUserOrdersCountAsync(string userId, CancellationToken cancellationToken = default);
 
         Task<decimal> GetUserTotalSpentAsync(string userId, CancellationToken cancellationToken = default);
-
+        Task<Order?> GetByPaymentIntentIdAsync(string paymentIntentId, CancellationToken cancellationToken = default);
 
     }
 }

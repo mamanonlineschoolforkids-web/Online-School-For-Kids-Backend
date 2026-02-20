@@ -5,7 +5,7 @@ using FluentValidation;
 using MediatR;
 
 
-namespace Application.Queries
+namespace Application.Queries.Content
 {
     public class GetCartQuery : IRequest<CartDto>
     {
@@ -79,7 +79,7 @@ namespace Application.Queries
                         Price = ci.Price,
                         OriginalPrice = c.DiscountPrice.HasValue ? c.Price : null,
                         DiscountPercentage = c.DiscountPrice.HasValue
-                            ? (int)Math.Round((1 - (c.DiscountPrice.Value / c.Price)) * 100)
+                            ? (int)Math.Round((1 - c.DiscountPrice.Value / c.Price) * 100)
                             : 0,
                         Rating = c.Rating,
                         DurationHours = c.DurationHours,

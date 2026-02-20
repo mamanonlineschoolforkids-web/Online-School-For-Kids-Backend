@@ -36,20 +36,38 @@ public static class DependencyInjection
         };
 
         ConventionRegistry.Register("CustomConventions", conventions, _ => true);
-        
+
         services.AddSingleton<MongoDbContext>();
 
         var redisConnection = configuration.GetConnectionString("Redis");
         services.AddSingleton<IConnectionMultiplexer>(
             ConnectionMultiplexer.Connect(redisConnection));
+        services.AddSingleton<MongoDbContext>();
 
+        /////////////////
+        //services.AddSingleton<MongoDbContext>();
+        //services.AddScoped(sp =>
+        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Course>("Courses"));
+
+        //services.AddScoped(sp =>
+        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Payment>("Payments"));
+
+        //services.AddScoped(sp =>
+        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Order.Order>("Orders"));
+
+        //services.AddScoped(sp =>
+        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Enrollment>("Enrollments"));
+       
+        //services.AddScoped(sp =>
+        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Users.User>("Users"));
+        /////////////////
 
         // Repositories
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IPayoutRepository, PayoutRepository>();
-        services.AddScoped(typeof(IOrderRepository), typeof(OrderRepository));
+        services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICartItemRepository, CartItemRepository>();
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<IWishListRepository, WishListRepository>();
@@ -65,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailService>();
         services.Configure<EmailSettings>(
            configuration.GetSection("EmailSettings"));
+        services.AddScoped<IPaymentService, PaymentService>();
 
         // HTTP Client for Google Auth
         services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();

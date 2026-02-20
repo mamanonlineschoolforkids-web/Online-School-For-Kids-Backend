@@ -1,11 +1,11 @@
 ﻿using Application.Commands.Order;
-using Application.DTOs;
-using Application.Queries;
+using Application.Queries.Content;
 using Application.Queries.GetUserOrders;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static Application.Queries.GetUserOrders.GetUserOrdersQueryHandler;
 
 namespace API.Controllers
 {
@@ -26,7 +26,7 @@ namespace API.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult<CreateOrderResponse>> CreateOrder([FromBody] CreateOrderDto dto)
+        public async Task<ActionResult<CreateOrderResponse>> CreateOrder([FromBody] CreateOrderRequest request)
         {
             try
             {
@@ -37,8 +37,8 @@ namespace API.Controllers
                 var command = new CreateOrderCommand
                 {
                     UserId = userId,
-                    PaymentMethod = dto.PaymentMethod,
-                    Notes = dto.Notes
+                    PaymentMethod = request.PaymentMethod,
+                    Notes = request.Notes
                 };
 
                 var result = await _mediator.Send(command);

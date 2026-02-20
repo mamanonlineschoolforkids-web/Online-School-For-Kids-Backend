@@ -1,5 +1,5 @@
 ﻿using Application.Commands.Course;
-using Application.Queries;
+using Application.Queries.Content;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

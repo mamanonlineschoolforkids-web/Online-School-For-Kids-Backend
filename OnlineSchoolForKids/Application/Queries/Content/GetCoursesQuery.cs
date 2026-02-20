@@ -1,23 +1,39 @@
-﻿using Application.Dtos;
-using Application.Queries;
-using Domain.Entities.Users;
+﻿using Domain.Entities.Users;
+using Domain.Enums.Content;
 using Domain.Enums.Users;
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Repositories.Content;
 using Domain.Interfaces.Repositories.Users;
-using MediatR;
-using System.Data;
 using CourseEntity = Domain.Entities.Content.Course;
-namespace Application.Handlers.Course
+using MediatR;
+
+
+namespace Application.Queries.Content
 {
+    public class GetCoursesQuery : IRequest<PagedResult<CourseDto>>
+    {
+        public string? CategoryId { get; set; }
+        public CourseLevel? Level { get; set; }
+        public decimal? MinPrice { get; set; }
+        public decimal? MaxPrice { get; set; }
+        public decimal? MinRating { get; set; }
+        public string? Language { get; set; }
+        public string? SearchQuery { get; set; }
+        public string SortBy { get; set; } = "relevance";
+        public string SortOrder { get; set; } = "desc";
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 12;
+
+        public string? UserId { get; set; }
+    }
     public class GetCoursesQueryHandler : IRequestHandler<GetCoursesQuery, PagedResult<CourseDto>>
     {
-       
+
         private readonly ICourseRepository _courseRepo;
         private readonly IWishListRepository _wishRepo;
         private readonly IUserRepository _userRepo;
 
-        public GetCoursesQueryHandler(ICourseRepository courseRepository, IWishListRepository wishRepo,IUserRepository userRepo)
+        public GetCoursesQueryHandler(ICourseRepository courseRepository, IWishListRepository wishRepo, IUserRepository userRepo)
         {
             _courseRepo = courseRepository;
             _wishRepo = wishRepo;
@@ -88,7 +104,7 @@ namespace Application.Handlers.Course
                 var wishlists = await _wishRepo.GetAllAsync(w => w.UserId == request.UserId);
                 wishlistCourseIds = wishlists.Select(w => w.CourseId).ToHashSet();
 
-                
+
             }
 
             var courseDtos = await Task.WhenAll(
@@ -106,10 +122,10 @@ namespace Application.Handlers.Course
         }
 
         // ✅ ADD THIS METHOD
-        private async Task<CourseDto> MapToCourseDto(CourseEntity course, HashSet<string> wishlistCourseIds,IGenericRepository<User> userRepository)
+        private async Task<CourseDto> MapToCourseDto(CourseEntity course, HashSet<string> wishlistCourseIds, IGenericRepository<User> userRepository)
         {
             var instructor = await _userRepo.GetByIdAsync(course.InstructorId);
-            var instructorName = (instructor != null && instructor.Role == UserRole.ContentCreator)
+            var instructorName = instructor != null && instructor.Role == UserRole.ContentCreator
                 ? instructor.FullName
                 : "Unknown";
 
@@ -118,7 +134,7 @@ namespace Application.Handlers.Course
                 Id = course.Id,
                 Title = course.Title,
                 Description = course.Description,
-                InstructorName =  instructorName,
+                InstructorName = instructorName,
                 InstructorId = course.InstructorId,
                 CategoryName = course.Category?.Name ?? "Unknown",
                 CategoryId = course.CategoryId,
@@ -134,12 +150,23 @@ namespace Application.Handlers.Course
                 IsFeatured = course.IsFeatured,
                 IsInWishlist = true,
                 IsInCart = false
-              
+
             };
 
 
         }
 
-    
+
+    }
+
+    public class PagedResult<T>
+    {
+        public IEnumerable<T> Items { get; set; } = new List<T>();
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+        public bool HasPreviousPage => Page > 1;
+        public bool HasNextPage => Page < TotalPages;
     }
 }

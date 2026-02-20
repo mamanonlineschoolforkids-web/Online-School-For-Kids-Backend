@@ -1,4 +1,5 @@
-﻿using Domain.Entities.Content;
+﻿using Domain.Entities;
+using Domain.Entities.Content;
 using Domain.Entities.Content.Order;
 using Domain.Entities.Users;
 using Infrastructure.Settings;
@@ -31,6 +32,7 @@ public class MongoDbContext
     public IMongoCollection<CartItem> CartItems => _database.GetCollection<CartItem>("cartItems");
     public IMongoCollection<Order> Orders => _database.GetCollection<Order>("orders");
     public IMongoCollection<Enrollment> Enrollments => _database.GetCollection<Enrollment>("enrollments");
+    public IMongoCollection<Payment> Payments => _database.GetCollection<Payment>("payments");
 
 
 
