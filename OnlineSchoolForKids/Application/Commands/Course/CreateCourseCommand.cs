@@ -1,224 +1,229 @@
-﻿using AutoMapper;
-using Domain.Entities;
-using Domain.Entities.Users;
+﻿using Domain.Entities;
+using Domain.Entities.Content.Progress;
 using Domain.Enums.Content;
 using Domain.Interfaces.Repositories.Content;
-using Domain.Interfaces.Repositories.Users;
 using MediatR;
-using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Logging;
+
 
 namespace Application.Commands
 {
-    public class CreateCourseCommand : IRequest<CourseDto>
+    public class CreateCourseCommand : IRequest<CourseCreatorDto?>
     {
-        public string CreatorId { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string CategoryId { get; set; } = string.Empty;
-        public CourseLevel Level { get; set; }
-        public decimal Price { get; set; }
-        public decimal? DiscountPrice { get; set; }
-        public int DurationHours { get; set; }
-        public string ThumbnailUrl { get; set; } = string.Empty;
-        public string Language { get; set; } = "English";
-
+        public CreateCourseDto Dto { get; set; } = new();
+        public string InstructorId { get; set; } = string.Empty;
     }
-    public class CreateCourseCommandHandler : IRequestHandler<CreateCourseCommand, CourseDto>
+
+    public class CreateCourseHandler : IRequestHandler<CreateCourseCommand, CourseCreatorDto?>
     {
         private readonly ICourseRepository _courseRepo;
-        private readonly IUserRepository _userRepo;
+        private readonly ILogger<CreateCourseHandler> _logger;
 
-        public CreateCourseCommandHandler(ICourseRepository courseRepo, IUserRepository userRepo)
+        public CreateCourseHandler(
+            ICourseRepository courseRepo,
+            ILogger<CreateCourseHandler> logger)
         {
             _courseRepo = courseRepo;
-            _userRepo = userRepo;
+            _logger = logger;
         }
 
-        public async Task<CourseDto> Handle(CreateCourseCommand request, CancellationToken cancellationToken)
+        public async Task<CourseCreatorDto?> Handle(CreateCourseCommand request, CancellationToken ct)
         {
-            var instructor = await _userRepo.GetByIdAsync(request.CreatorId);
-
-            if (instructor == null)
-                throw new UnauthorizedAccessException("User is not an instructor");
-
-            var course = new Domain.Entities.Content.Course
+            try
             {
-                Id = Guid.NewGuid().ToString(),
-                Title = request.Title,
-                Description = request.Description,
-                InstructorId = request.CreatorId,
-                CategoryId = request.CategoryId,
-                Level = request.Level,
-                Price = request.Price,
-                DiscountPrice = request.DiscountPrice,
-                DurationHours = request.DurationHours,
-                ThumbnailUrl = request.ThumbnailUrl,
-                Language = request.Language,
-                Rating = 0,
-                TotalStudents = 0,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsPublished = false,
-                IsFeatured = false
-            };
+                var dto = request.Dto;
 
-            await _courseRepo.CreateAsync(course);
-
-
-            return MapToCourseDto(course, instructor);
-        }
-
-        private CourseDto MapToCourseDto(Domain.Entities.Content.Course course, User instructor)
-        {
-            return new CourseDto
-            {
-                Id = course.Id,
-                Title = course.Title,
-                Description = course.Description,
-                InstructorName = instructor?.FullName ?? "Unknown",
-                InstructorId = course.InstructorId,
-                CategoryName = course.Category?.Name ?? "Unknown",
-                CategoryId = course.CategoryId,
-                Level = course.Level,
-                LevelDisplay = course.Level.ToString(),
-                Price = course.Price,
-                DiscountPrice = course.DiscountPrice,
-                Rating = course.Rating,
-                TotalStudents = course.TotalStudents,
-                DurationHours = course.DurationHours,
-                ThumbnailUrl = course.ThumbnailUrl,
-                Language = course.Language,
-                IsFeatured = course.IsFeatured,
-                IsInWishlist = false,
-                IsInCart = false
-
-            };
-        }
-
-        public class UpdateCourseCommand : IRequest<UpdateCourseResponse>
-        {
-            public string CreatorId { get; set; } = string.Empty;
-            public string CourseId { get; set; } = string.Empty;
-            public string InstructorId { get; set; } = string.Empty;
-
-            [Required(ErrorMessage = "Title is required")]
-            [StringLength(200, ErrorMessage = "Title cannot exceed 200 characters")]
-            public string Title { get; set; } = string.Empty;
-
-            [Required(ErrorMessage = "Description is required")]
-            [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")]
-            public string Description { get; set; } = string.Empty;
-
-            [Required(ErrorMessage = "Category is required")]
-            public string CategoryId { get; set; } = string.Empty;
-
-            [Required(ErrorMessage = "Level is required")]
-            public CourseLevel Level { get; set; }
-
-            [Required(ErrorMessage = "Price is required")]
-            [Range(0, 10000, ErrorMessage = "Price must be between 0 and 10000")]
-            public decimal Price { get; set; }
-
-            [Range(0, 10000, ErrorMessage = "Discount price must be between 0 and 10000")]
-            public decimal? DiscountPrice { get; set; }
-
-            [Required(ErrorMessage = "Duration is required")]
-            [Range(1, 500, ErrorMessage = "Duration must be between 1 and 500 hours")]
-            public int DurationHours { get; set; }
-
-            public string ThumbnailUrl { get; set; } = string.Empty;
-
-            [Required(ErrorMessage = "Language is required")]
-            [StringLength(50)]
-            public string Language { get; set; } = "English";
-
-            public bool IsPublished { get; set; }
-            public bool IsFeatured { get; set; }
-        }
-        public class UpdateCourseCommandHandler : IRequestHandler<UpdateCourseCommand, UpdateCourseResponse>
-        {
-
-            private readonly IMapper _mapper;
-            private readonly ICourseRepository _courseRepo;
-
-            public UpdateCourseCommandHandler(
-
-                IMapper mapper
-               , ICourseRepository courseRepo)
-            {
-
-                _mapper = mapper;
-                _courseRepo = courseRepo;
-            }
-            public async Task<UpdateCourseResponse> Handle(UpdateCourseCommand request, CancellationToken cancellationToken)
-            {
-
-                // Get the course
-                var course = await _courseRepo.GetByIdAsync(request.CourseId);
-                if (course == null || course.IsDeleted || course.InstructorId != request.CreatorId)
+                var course = new Domain.Entities.Content.Course
                 {
-                    throw new InvalidOperationException("Course not found or access denied.");
-                }
-                // Validate discount price
-                if (request.DiscountPrice.HasValue && request.DiscountPrice.Value > request.Price)
+                    Title = dto.Title,
+                    Description = dto.Description,
+                    CategoryId = dto.CategoryId,
+                    Level = Enum.Parse<CourseLevel>(dto.Level, true),
+                    Price = dto.Price,
+                    ThumbnailUrl = dto.ThumbnailUrl ?? "",
+                    IsPublished = false,
+                    Sections = new List<Section>()
+                };
+
+                await _courseRepo.CreateAsync(course, ct);
+
+                _logger.LogInformation("Course created: {CourseId} - {Title}", course.Id, course.Title);
+
+                return new CourseCreatorDto
                 {
-                    return new UpdateCourseResponse
-                    {
-                        Success = false,
-                        Message = "Discount price cannot be greater than regular price"
-                    };
-                }
-
-                // Update course properties
-                course.Title = request.Title;
-                course.Description = request.Description;
-                course.CategoryId = request.CategoryId;
-                course.Level = request.Level;
-                course.Price = request.Price;
-                course.DiscountPrice = request.DiscountPrice;
-                course.DurationHours = request.DurationHours;
-                course.Language = request.Language;
-                course.IsPublished = request.IsPublished;
-                course.IsFeatured = request.IsFeatured;
-                course.UpdatedAt = DateTime.UtcNow;
-
-                // Only update thumbnail if provided
-                if (!string.IsNullOrWhiteSpace(request.ThumbnailUrl))
-                {
-                    course.ThumbnailUrl = request.ThumbnailUrl;
-                }
-
-                // Save changes
-                await _courseRepo.UpdateAsync(request.CourseId, course);
-                //await _unitOfWork.SaveChangesAsync();
-
-                // Map to DTO
-                var courseDto = _mapper.Map<CourseDto>(course);
-
-                return new UpdateCourseResponse
-                {
-                    Success = true,
-                    Message = "Course updated successfully",
-                    Course = courseDto
+                    Id = course.Id,
+                    Title = course.Title,
+                    Description = course.Description,
+                    ThumbnailUrl = course.ThumbnailUrl,
+                    Price = course.Price,
+                    IsPublished = course.IsPublished,
+                    TotalSections = 0,
+                    TotalLessons = 0,
+                    TotalStudents = 0,
+                    CreatedAt = course.CreatedAt,
+                    UpdatedAt = course.UpdatedAt
                 };
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating course");
+                return null;
+            }
+
+        }
+    
+    }
+    public class UpdateCourseCommand : IRequest<bool>
+    {
+        public string CourseId { get; set; } = string.Empty;
+        public string InstructorId { get; set; } = string.Empty;
+        public UpdateCourseDto Dto { get; set; } = new();
+    }
+
+    public class UpdateCourseHandler : IRequestHandler<UpdateCourseCommand, bool>
+    {
+        private readonly ICourseRepository _courseRepo;
+        private readonly ILogger<UpdateCourseHandler> _logger;
+
+        public UpdateCourseHandler(
+            ICourseRepository courseRepo,
+            ILogger<UpdateCourseHandler> logger)
+        {
+            _courseRepo = courseRepo;
+            _logger = logger;
+        }
+
+        public async Task<bool> Handle(UpdateCourseCommand request, CancellationToken ct)
+        {
+            try
+            {
+                var course = await _courseRepo.GetByIdAsync(request.CourseId, ct);
+                if (course == null) return false;
+
+                var dto = request.Dto;
+
+                course.Title = dto.Title;
+                course.Description = dto.Description;
+                course.CategoryId = dto.CategoryId;
+                course.Level = dto.Level;
+                course.Price = dto.Price;
+                course.ThumbnailUrl = dto.ThumbnailUrl ?? course.ThumbnailUrl;
+                course.IsPublished = dto.IsPublished;
+                course.UpdatedAt = DateTime.UtcNow;
+
+                await _courseRepo.UpdateAsync(course.Id, course, ct);
+
+                _logger.LogInformation("Course updated: {CourseId}", course.Id);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating course {CourseId}", request.CourseId);
+                return false;
+            }
+        }
+        public class DeleteCourseCommand : IRequest<bool>
+        {
+            public string CourseId { get; set; } = string.Empty;
+            public string InstructorId { get; set; } = string.Empty;
+        }
+
+        public class DeleteCourseHandler : IRequestHandler<DeleteCourseCommand, bool>
+        {
+            private readonly ICourseRepository _courseRepo;
+            private readonly ILogger<DeleteCourseHandler> _logger;
+
+            public DeleteCourseHandler(
+                ICourseRepository courseRepo,
+                ILogger<DeleteCourseHandler> logger)
+            {
+                _courseRepo = courseRepo;
+                _logger = logger;
+            }
+
+            public async Task<bool> Handle(DeleteCourseCommand request, CancellationToken ct)
+            {
+                try
+                {
+                    var course = await _courseRepo.GetByIdAsync(request.CourseId, ct);
+                    if (course == null) return false;
+
+                    await _courseRepo.DeleteAsync(course.Id, ct);
+
+                    _logger.LogInformation("Course deleted: {CourseId}", course.Id);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting course {CourseId}", request.CourseId);
+                    return false;
+                }
+            }
+        }
+        public class PublishCourseCommand : IRequest<bool>
+        {
+            public string CourseId { get; set; } = string.Empty;
+            public string InstructorId { get; set; } = string.Empty;
+            public bool Publish { get; set; } = true;
+        }
+
+        public class PublishCourseHandler : IRequestHandler<PublishCourseCommand, bool>
+        {
+            private readonly ICourseRepository _courseRepo;
+            private readonly ILogger<PublishCourseHandler> _logger;
+
+            public PublishCourseHandler(
+                ICourseRepository courseRepo,
+                ILogger<PublishCourseHandler> logger)
+            {
+                _courseRepo = courseRepo;
+                _logger = logger;
+            }
+
+            public async Task<bool> Handle(PublishCourseCommand request, CancellationToken ct)
+            {
+                try
+                {
+                    var course = await _courseRepo.GetByIdAsync(request.CourseId, ct);
+                    if (course == null) return false;
+
+                    course.IsPublished = request.Publish;
+                    course.UpdatedAt = DateTime.UtcNow;
+
+                    await _courseRepo.UpdateAsync(course.Id, course, ct);
+
+                    _logger.LogInformation(
+                        "Course {Action}: {CourseId}",
+                        request.Publish ? "published" : "unpublished",
+                        course.Id);
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error publishing course {CourseId}", request.CourseId);
+                    return false;
+                }
+            }
         }
     }
-
-}
-public class UpdateCourseResponse
-{
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public CourseDto? Course { get; set; }
-}
-
-// Delete Course (Soft Delete)
-public class DeleteCourseCommand : IRequest<bool>
+    public class PublishCourseRequest
     {
-        public string CreatorId { get; set; } = string.Empty;
-        public string CourseId { get; set; } = string.Empty;
+        public bool Publish { get; set; }
     }
+
+    public class CreateCourseDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+       
+        public string CategoryId { get; set; } = string.Empty;   // بدل Category
+        public string Level { get; set; } = "Beginner";
+        public decimal Price { get; set; }
+        public string? ThumbnailUrl { get; set; }
+    }
+}
+
 public class CourseDto : BaseEntity
 {
     public string Title { get; set; } = string.Empty;
@@ -240,3 +245,33 @@ public class CourseDto : BaseEntity
     public bool IsInWishlist { get; set; }
     public bool IsInCart { get; set; }
 }
+
+public class CourseCreatorDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ThumbnailUrl { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public bool IsPublished { get; set; }
+        public int TotalSections { get; set; }
+        public int TotalLessons { get; set; }
+        public int TotalStudents { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+public class UpdateCourseDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string CategoryId { get; set; } = string.Empty;
+    public CourseLevel Level { get; set; } 
+    public decimal Price { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public string? PreviewVideoUrl { get; set; }
+    public bool IsPublished { get; set; }
+}
+
+
+
+

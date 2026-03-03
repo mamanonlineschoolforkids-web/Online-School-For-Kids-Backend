@@ -1,7 +1,5 @@
 ﻿using Domain.Entities;
-using Domain.Entities.Content.Progress;
 using Domain.Interfaces.Repositories;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Linq.Expressions;
 
@@ -145,4 +143,5 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
 
         return (items, totalCount);
     }
+
 }

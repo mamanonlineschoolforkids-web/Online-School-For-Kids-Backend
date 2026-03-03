@@ -1,9 +1,5 @@
-﻿using Application.Dtos;
-using Domain.Interfaces.Repositories.Content;
+﻿using Domain.Interfaces.Repositories.Content;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Application.Queries.Profile.Creators;
 

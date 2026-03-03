@@ -10,8 +10,8 @@ namespace Domain.Entities.Content.Progress
         {
             [BsonRepresentation(BsonType.ObjectId)]
             public string CourseId { get; set; } = string.Empty;
-          [BsonRepresentation(BsonType.ObjectId)]
-          public string SectionId { get; set; } = string.Empty;
+            [BsonRepresentation(BsonType.ObjectId)]
+             public string SectionId { get; set; } = string.Empty;
             public string Title { get; set; } = string.Empty;
             public string? Description { get; set; }
             public string VideoUrl { get; set; } = string.Empty;
@@ -19,9 +19,11 @@ namespace Domain.Entities.Content.Progress
             public int Order { get; set; } = 0; 
             public bool IsPreview { get; set; } = false;
             public bool IsPublished { get; set; } = true;
+            public bool IsFree { get; set; } = false;
+            public ICollection<Material> Materials { get; set; }
 
-            // Navigation
-            public Course? Course { get; set; }
+        // Navigation
+        public Course? Course { get; set; }
             public Section? Section { get; set; }
             public string? QuizId { get; set; }
         }

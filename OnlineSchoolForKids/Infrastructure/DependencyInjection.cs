@@ -1,6 +1,4 @@
-﻿using Domain.Entities.Content.Progress;
-using Domain.Entities.Content.Quiz;
-using Domain.Interfaces.Repositories;
+﻿using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Repositories.Content;
 using Domain.Interfaces.Repositories.Users;
 using Domain.Interfaces.Services;
@@ -16,7 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Conventions;
-using MongoDB.Driver;
 using StackExchange.Redis;
 using System.Text;
 
@@ -88,7 +85,7 @@ public static class DependencyInjection
         //services.AddScoped<IMongoCollection<LessonProgress>>(sp =>
         //{
         //    var database = sp.GetRequiredService<IMongoDatabase>();
-        //    return database.GetCollection<LessonProgress>("LessonProgress"); 
+        //    return database.GetCollection<LessonProgress>("LessonProgress");
         //});
         ///////////////////////////////////////////////
 
