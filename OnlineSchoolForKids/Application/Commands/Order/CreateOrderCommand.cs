@@ -1,5 +1,4 @@
-﻿using Domain.Entities;
-using Domain.Entities.Content.Order;
+﻿using Domain.Entities.Content.Order;
 using Domain.Enums.Content;
 using Domain.Enums.Users;
 using Domain.Interfaces.Repositories.Content;
@@ -141,14 +140,13 @@ namespace Application.Commands.Order
 
         }
      
-    } } 
+    } }
 
-
-
-
-
-
-
+public class CreateOrderRequest
+{
+    public PaymentMethod PaymentMethod { get; set; }
+    public string? Notes { get; set; }
+}
 public class CreateOrderResponse
     {
         public bool Success { get; set; }

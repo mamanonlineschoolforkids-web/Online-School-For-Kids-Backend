@@ -1,7 +1,4 @@
-﻿using Domain.Entities.Content;
-using System.Text.Json.Serialization;
-
-namespace Domain.Entities.Content.Order
+﻿namespace Domain.Entities.Content.Order
 {
     public class OrderItem
     {

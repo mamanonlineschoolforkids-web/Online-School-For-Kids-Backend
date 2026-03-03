@@ -2,7 +2,6 @@
 using Domain.Enums.Content;
 using Domain.Interfaces.Repositories.Content;
 using Infrastructure.Data;
-using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 
 namespace Infrastructure.Repositories.Content
@@ -14,7 +13,7 @@ namespace Infrastructure.Repositories.Content
         {
         }
 
-        public new async Task<Order> CreateAsync(Order order,CancellationToken cancellationToken = default)
+        public new async Task<Order> CreateAsync(Order order, CancellationToken cancellationToken = default)
         {
             // Generate order number if not provided
             if (string.IsNullOrEmpty(order.OrderNumber))
@@ -31,12 +30,12 @@ namespace Infrastructure.Repositories.Content
             return order;
         }
 
-        public async Task<Order?> GetByOrderNumberAsync(string orderNumber,CancellationToken cancellationToken = default)
+        public async Task<Order?> GetByOrderNumberAsync(string orderNumber, CancellationToken cancellationToken = default)
         {
             return await GetOneAsync(o => o.OrderNumber == orderNumber, cancellationToken);
         }
 
-        public async Task<IEnumerable<Order>> GetUserOrdersAsync(string userId,CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Order>> GetUserOrdersAsync(string userId, CancellationToken cancellationToken = default)
         {
             return await _collection
               .Find(o => !o.IsDeleted && o.UserId == userId)
@@ -211,7 +210,7 @@ namespace Infrastructure.Repositories.Content
                 .Limit(count)
                 .ToListAsync(cancellationToken);
         }
-        public async Task<decimal> GetUserTotalSpentAsync( string userId,CancellationToken cancellationToken = default)
+        public async Task<decimal> GetUserTotalSpentAsync(string userId, CancellationToken cancellationToken = default)
         {
             var orders = await _collection
                 .Find(o => !o.IsDeleted && o.UserId == userId && o.Status == OrderStatus.Completed)
@@ -227,7 +226,12 @@ namespace Infrastructure.Repositories.Content
             var random = new Random().Next(1000, 9999);
             return $"ORD-{timestamp}-{random}";
         }
-
+        public async Task<Order?> GetByPaymentIntentIdAsync(string paymentIntentId, CancellationToken cancellationToken = default)
+        {
+            return await GetOneAsync(
+        o => o.PaymentIntentId == paymentIntentId,  // ✅ Exact match
+        cancellationToken);
+        }
     }
 }
 

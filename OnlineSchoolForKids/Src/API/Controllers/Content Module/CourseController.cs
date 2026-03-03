@@ -1,10 +1,10 @@
 ﻿using Application.Commands;
-using Application.Dtos;
-using Application.Queries;
+using Application.Queries.Content;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static Application.Commands.DeleteFromFavouriteCommandHandler;
 
 namespace API.Controllers
 {
@@ -49,8 +49,6 @@ namespace API.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-
                 var query = new GetCourseByIdQuery
                 {
                     CourseId = id,
@@ -153,7 +151,7 @@ namespace API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<AddToFavouriteResponse>> AddToFavourites([FromBody] AddToFavouriteDto dto)
+        public async Task<ActionResult<AddToFavouriteResponse>> AddToFavourites([FromBody] AddToFavouriteRequest request)
         {
             try
             {
@@ -165,7 +163,7 @@ namespace API.Controllers
 
                 var command = new AddToFavouriteCommand
                 {
-                    CourseId = dto.CourseId,
+                    CourseId = request.CourseId,
                     UserId = userId
                 };
 
@@ -240,10 +238,6 @@ namespace API.Controllers
                 });
             }
         }
-
-        
-       
-
 
     }
 }
