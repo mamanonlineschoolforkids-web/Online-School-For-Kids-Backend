@@ -1,4 +1,6 @@
-﻿using Domain.Interfaces.Repositories;
+﻿using Domain.Entities.Content.Progress;
+using Domain.Entities.Content.Quiz;
+using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Repositories.Content;
 using Domain.Interfaces.Repositories.Users;
 using Domain.Interfaces.Services;
@@ -14,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Conventions;
+using MongoDB.Driver;
 using StackExchange.Redis;
 using System.Text;
 
@@ -45,48 +48,48 @@ public static class DependencyInjection
         services.AddSingleton<MongoDbContext>();
 
         ///////////////////////////////////////////
-        //services.AddSingleton<MongoDbContext>();
-        //services.AddScoped(sp =>
-        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Course>("Courses"));
-        //services.AddScoped(sp =>
-        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Payment>("Payments"));
-        //services.AddScoped(sp =>
-        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Order.Order>("Orders"));
-        //services.AddScoped(sp =>
-        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Enrollment>("Enrollments"));
-        //services.AddScoped(sp =>
-        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Quiz.Quiz>("Quizzes"));
-        //services.AddScoped<IMongoCollection<QuizAttempt>>(sp =>
-        //{
-        //    var database = sp.GetRequiredService<IMongoDatabase>();
-        //    return database.GetCollection<QuizAttempt>("QuizAttempts");
-        //});
-        //services.AddScoped(sp =>
-        //    sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Users.User>("Users"));
-        //var mongoSection = configuration.GetSection("MongoDbSettings");
-        //var connectionString = mongoSection["ConnectionString"];
-        //var databaseName = mongoSection["DatabaseName"];
-        //if (string.IsNullOrEmpty(connectionString))
-        //{
-        //    throw new ArgumentNullException(nameof(connectionString),
-        //        "MongoDB ConnectionString is missing in appsettings.json under 'MongoDbSettings'");
-        //}
-        //services.AddSingleton<IMongoClient>(new MongoClient(connectionString));
-        //services.AddScoped<IMongoDatabase>(sp =>
-        //{
-        //    var client = sp.GetRequiredService<IMongoClient>();
-        //    return client.GetDatabase(databaseName);
-        //});
-        //services.AddScoped<IMongoCollection<CourseProgress>>(sp =>
-        //{
-        //    var database = sp.GetRequiredService<IMongoDatabase>();
-        //    return database.GetCollection<CourseProgress>("CourseProgress");
-        //});
-        //services.AddScoped<IMongoCollection<LessonProgress>>(sp =>
-        //{
-        //    var database = sp.GetRequiredService<IMongoDatabase>();
-        //    return database.GetCollection<LessonProgress>("LessonProgress");
-        //});
+//        services.AddSingleton<MongoDbContext>();
+//        services.AddScoped(sp =>
+//            sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Course>("Courses"));
+//        services.AddScoped(sp =>
+//            sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Payment>("Payments"));
+//        services.AddScoped(sp =>
+//            sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Order.Order>("Orders"));
+//        services.AddScoped(sp =>
+//            sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Enrollment>("Enrollments"));
+//        services.AddScoped(sp =>
+//            sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Content.Quiz.Quiz>("Quizzes"));
+//        services.AddScoped<IMongoCollection<QuizAttempt>>(sp =>
+//        {
+//            var database = sp.GetRequiredService<IMongoDatabase>();
+//            return database.GetCollection<QuizAttempt>("QuizAttempts");
+//        });
+//        services.AddScoped(sp =>
+//            sp.GetRequiredService<MongoDbContext>().GetCollection<Domain.Entities.Users.User>("Users"));
+//        var mongoSection = configuration.GetSection("MongoDbSettings");
+//    var connectionString = mongoSection["ConnectionString"];
+//    var databaseName = mongoSection["DatabaseName"];
+//        if (string.IsNullOrEmpty(connectionString))
+//        {
+//            throw new ArgumentNullException(nameof(connectionString),
+//                "MongoDB ConnectionString is missing in appsettings.json under 'MongoDbSettings'");
+//}
+//services.AddSingleton<IMongoClient>(new MongoClient(connectionString));
+//        services.AddScoped<IMongoDatabase>(sp =>
+//        {
+//            var client = sp.GetRequiredService<IMongoClient>();
+//            return client.GetDatabase(databaseName);
+//        });
+//        services.AddScoped<IMongoCollection<CourseProgress>>(sp =>
+//        {
+//            var database = sp.GetRequiredService<IMongoDatabase>();
+//            return database.GetCollection<CourseProgress>("CourseProgress");
+//        });
+//        services.AddScoped<IMongoCollection<LessonProgress>>(sp =>
+//        {
+//            var database = sp.GetRequiredService<IMongoDatabase>();
+//            return database.GetCollection<LessonProgress>("LessonProgress");
+//        });
         ///////////////////////////////////////////////
 
         // Repositories
@@ -107,6 +110,7 @@ public static class DependencyInjection
         services.AddScoped<ILessonRepository, LessonRepository>();
         services.AddScoped<ICourseProgressRepository, CourseProgressRepository>();
         services.AddScoped<IBookmarkRepository, BookmarkRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
 
         // Authentication Services
         services.Configure<JwtSettings>(

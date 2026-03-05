@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Entities.Content;
+using Domain.Entities.Content.Calendar;
 using Domain.Entities.Content.Order;
 using Domain.Entities.Content.Progress;
 using Domain.Entities.Content.Quiz;
@@ -43,6 +44,7 @@ public class MongoDbContext
     public IMongoCollection<Note> Notes => _database.GetCollection<Note>("notes");
     public IMongoCollection<Bookmark> Bookmarks => _database.GetCollection<Bookmark>("bookmarks");
     public IMongoCollection<Payment> Payments => _database.GetCollection<Payment>("payments");
+    public IMongoCollection<Event> Events => _database.GetCollection<Event>("events");
 
 
 
