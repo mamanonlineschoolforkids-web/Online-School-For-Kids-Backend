@@ -1,5 +1,6 @@
 ﻿using Application.Commands.Course;
 using Application.Queries.Content;
+using Application.Queries.Content.Calendar;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -337,6 +338,26 @@ namespace API.Controllers.Content_Module
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting lesson progress");
+                return StatusCode(500, new { message = "An error occurred", success = false });
+            }
+        }
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetStats(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null)
+                    return Unauthorized(new { message = "User not authenticated", success = false });
+
+                var query = new GetCalendarStatsQuery { UserId = userId };
+                var result = await _mediator.Send(query, cancellationToken);
+
+                return Ok(new { data = result, success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting calendar stats");
                 return StatusCode(500, new { message = "An error occurred", success = false });
             }
         }
