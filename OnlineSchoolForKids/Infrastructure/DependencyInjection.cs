@@ -10,6 +10,8 @@ using Infrastructure.Repositories.Content;
 using Infrastructure.Repositories.Users;
 using Infrastructure.Services;
 using Infrastructure.Settings;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -123,6 +125,11 @@ public static class DependencyInjection
            configuration.GetSection("EmailSettings"));
         services.AddScoped<IPaymentService, PaymentService>();
 
+        services.AddMemoryCache();
+
+        services.AddScoped<ITempTokenService, TempTokenService>();
+
+
         // HTTP Client for Google Auth
         services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
 
@@ -136,6 +143,7 @@ public static class DependencyInjection
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultSignInScheme       = CookieAuthenticationDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
         {
@@ -153,7 +161,15 @@ public static class DependencyInjection
                     Encoding.UTF8.GetBytes(jwtSettings?.Secret ?? string.Empty)),
                 ClockSkew = TimeSpan.Zero
             };
-        });
+        }).AddCookie()                    
+        .AddGoogle(options =>              
+        {
+            options.ClientId     = configuration["Google:ClientId"]!;
+            options.ClientSecret = configuration["Google:ClientSecret"]!;
+            options.SaveTokens   = true;
+            options.ClaimActions.MapJsonKey("picture", "picture");
+            options.ClaimActions.MapJsonKey("email_verified", "email_verified");
+        }); ;
 
         services.AddAuthorization();
 

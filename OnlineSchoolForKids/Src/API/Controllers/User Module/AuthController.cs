@@ -1,7 +1,11 @@
 ﻿using Application.Commands.Auth;
+using Domain.Enums.Users;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace API.Controllers;
 
@@ -10,10 +14,13 @@ namespace API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(IMediator mediator)
+
+    public AuthController(IMediator mediator, IConfiguration configuration )
     {
-        _mediator = mediator;
+        _mediator = mediator;        _configuration=configuration;
+
     }
 
     /// <summary>
@@ -190,20 +197,56 @@ public class AuthController : ControllerBase
     }
 
 
-    /// <summary>
-    /// TODO:: Authenticate with Google OAuth
-    /// </summary>
-    [HttpPost("google")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthRequest request)
+    [HttpGet("google")]
+    public IActionResult GoogleLogin([FromQuery] string? role = null)
     {
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme)
+        };
+
+        // Piggy-back the role through OAuth state so it survives the redirect
+        if (!string.IsNullOrEmpty(role))
+            properties.Items["role"] = role;
+
+        return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+    }
+
+    [HttpGet("google/callback")]
+    public async Task<IActionResult> GoogleCallback()
+    {
+        var frontendUrl = _configuration["FrontUrl"] ?? "http://localhost:5173";
+
+        var authResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+        if (!authResult.Succeeded)
+            return Redirect($"{frontendUrl}/login?error=google_failed");
+
+        // Extract claims from the authenticated principal
+        var googleId = authResult.Principal!.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var email = authResult.Principal!.FindFirst(ClaimTypes.Email)?.Value;
+        var name = authResult.Principal!.FindFirst(ClaimTypes.Name)?.Value;
+        var picture = authResult.Principal!.FindFirst("picture")?.Value;
+        var emailVerified = authResult.Principal!.FindFirst("email_verified")?.Value == "true";
+
+        if (string.IsNullOrEmpty(googleId) || string.IsNullOrEmpty(email))
+            return Redirect($"{frontendUrl}/login?error=google_failed");
+
+        // Recover the role that was stored before the redirect (may be null)
+        authResult.Properties!.Items.TryGetValue("role", out var roleStr);
+        UserRole? parsedRole = null;
+        if (!string.IsNullOrEmpty(roleStr) && Enum.TryParse<UserRole>(roleStr, ignoreCase: true, out var r))
+            parsedRole = r;
+
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
         var command = new GoogleAuthCommand(
-            request.GoogleToken,
-            request.Role,
+            googleId,
+            email,
+            name ?? email,
+            picture,
+            emailVerified,
+            parsedRole,
             ipAddress,
             userAgent
         );
@@ -211,13 +254,60 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
 
         if (!result.IsSuccess)
+            return Redirect($"{frontendUrl}/login?error={Uri.EscapeDataString(result.Error ?? "auth_failed")}");
+
+        // New user – role unknown → send to role-selection page
+        if (result.Data!.RequiresRoleSelection)
         {
-            return BadRequest(new { error = result.Error });
+            return Redirect(
+                $"{frontendUrl}/complete-profile" +
+                $"?temp_token={Uri.EscapeDataString(result.Data.TempToken!)}");
         }
+
+        // Success → pass tokens to the frontend callback page
+        return Redirect(
+            $"{frontendUrl}/auth/callback" +
+            $"?access_token={Uri.EscapeDataString(result.Data.AccessToken!)}" +
+            $"&refresh_token={Uri.EscapeDataString(result.Data.RefreshToken!)}" +
+            $"&expires_at={Uri.EscapeDataString(result.Data.ExpiresAt.ToString("O"))}");
+    }
+
+    [HttpPost("google/complete-registration")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CompleteGoogleRegistration(
+     [FromBody] CompleteGoogleRegistrationRequest request)
+    {
+        // Parse role string → enum
+        if (!Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var role))
+            return BadRequest(new { error = $"Invalid role: {request.Role}" });
+
+        // Parse date string → DateTime
+        if (!DateTime.TryParse(request.DateOfBirth, out var dateOfBirth))
+            return BadRequest(new { error = $"Invalid date of birth: {request.DateOfBirth}" });
+
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+        var command = new CompleteGoogleRegistrationCommand(
+            request.TempToken,
+            role,
+          dateOfBirth,
+            request.Country,
+            request.Expertise,
+            request.CvLink,
+            request.PortfolioUrl,
+            ipAddress,
+            userAgent
+        );
+
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error });
 
         return Ok(result.Data);
     }
-
     /// <summary>
     /// Get current user info (requires authentication)
     /// </summary>
