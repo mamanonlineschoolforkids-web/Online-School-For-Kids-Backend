@@ -1,4 +1,5 @@
-﻿using Domain.Entities.Content.Progress;
+﻿using Domain.Entities.Content.Moderation;
+using Domain.Entities.Content.Progress;
 using Domain.Entities.Content.Quiz;
 using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Repositories.Content;
