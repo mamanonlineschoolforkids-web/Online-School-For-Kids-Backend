@@ -105,8 +105,8 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { error = result.Error });
         }
-
         return Ok(result.Data);
+       
     }
 
 

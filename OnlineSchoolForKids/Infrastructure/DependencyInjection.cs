@@ -1,4 +1,5 @@
-﻿using Domain.Entities.Content.Moderation;
+﻿using Domain.Entities.Content.Leaderboard;
+using Domain.Entities.Content.Moderation;
 using Domain.Entities.Content.Progress;
 using Domain.Entities.Content.Quiz;
 using Domain.Interfaces.Repositories;
@@ -102,6 +103,23 @@ public static class DependencyInjection
         //    var db = sp.GetRequiredService<IMongoDatabase>();
         //    return db.GetCollection<ReportedContent>("ReportedContents");
         //});
+        //services.AddSingleton<IMongoCollection<UserPoints>>(sp =>
+        //{
+        //    var database = sp.GetRequiredService<IMongoDatabase>();
+        //    return database.GetCollection<UserPoints>("userPoints");
+        //});
+
+        //services.AddSingleton<IMongoCollection<Badge>>(sp =>
+        //{
+        //    var database = sp.GetRequiredService<IMongoDatabase>();
+        //    return database.GetCollection<Badge>("badges");
+        //});
+
+        //services.AddSingleton<IMongoCollection<PointTransaction>>(sp =>
+        //{
+        //    var database = sp.GetRequiredService<IMongoDatabase>();
+        //    return database.GetCollection<PointTransaction>("pointTransactions");
+        //});
         ///////////////////////////////////////////////
 
         // Repositories
@@ -125,6 +143,9 @@ public static class DependencyInjection
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddScoped<IReportedContentRepository, ReportedContentRepository>();
+        services.AddScoped<IUserPointsRepository, UserPointsRepository>();
+        services.AddScoped<IBadgeRepository, BadgeRepository>();
+        services.AddScoped<IPointTransactionRepository, PointTransactionRepository>();
 
         // Authentication Services
         services.Configure<JwtSettings>(
