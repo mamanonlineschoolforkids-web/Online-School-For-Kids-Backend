@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Domain.Enums.Users;
+﻿namespace Domain.Enums.Users;
 
 public enum UserStatus
 {
-    Active , Pending
+    Active , Pending , Suspended
 }

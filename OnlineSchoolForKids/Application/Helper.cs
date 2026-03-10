@@ -1,6 +1,5 @@
 ﻿using Application.Commands.Profile.Users;
 using Application.DTOs;
-using Application.DTOs.Profile;
 using Domain.Entities.Users;
 using Domain.Enums.Users;
 
@@ -97,7 +96,9 @@ public class Helper
                 Role = user.Role.ToString(),
                 ProfilePictureUrl = user.ProfilePictureUrl,
                 Phone = user.Phone,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                IsSuperAdmin = user.IsSuperAdmin ?? false
+
             }
         };
     }

@@ -3,6 +3,7 @@ using Domain.Entities.Users;
 using Domain.Enums.Users;
 using Domain.Interfaces.Repositories.Users;
 using Domain.Interfaces.Services;
+using Domain.Interfaces.Services.Shared;
 using MediatR;
 
 namespace Application.Commands.Auth;
@@ -76,8 +77,20 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
             userDto = MapToUserDto(user, false);
         }
 
-            // Update last login
-            user.LastLoginAt = DateTime.UtcNow;
+        if (user.Role == UserRole.Admin && user.TwoFactorEnabled == true)
+        {
+            // Generate a short-lived temp token to identify the pending session
+            var tempToken = _jwtTokenService.GenerateTempToken(user.Id);
+
+            return Result<AuthResponse>.Success(new AuthResponse
+            {
+                Requires2FA = true,
+                TempToken = tempToken
+            });
+        }
+
+        // Update last login
+        user.LastLoginAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user.Id, user, cancellationToken);
 
         // Generate tokens
