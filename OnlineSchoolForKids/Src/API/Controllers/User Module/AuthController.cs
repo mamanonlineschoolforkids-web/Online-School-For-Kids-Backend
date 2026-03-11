@@ -18,9 +18,9 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
 
 
-    public AuthController(IMediator mediator, IConfiguration configuration )
+    public AuthController(IMediator mediator, IConfiguration configuration)
     {
-        _mediator = mediator;        _configuration=configuration;
+        _mediator = mediator;        _configuration = configuration;
 
     }
 
@@ -78,7 +78,64 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { message = result.Data });
-    } 
+    }
+
+    [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+        var command = new LoginCommand(
+            request.Email,
+            request.Password,
+            request.RememberMe,
+            ipAddress,
+            userAgent
+        );
+
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { error = result.Error });
+        }
+        return Ok(result.Data);
+
+    }
+
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        var command = new ForgotPasswordCommand(request.Email);
+        var result = await _mediator.Send(command);
+
+        return Ok(new { message = result.Data });
+    }
+ 
+    [HttpPost("reset-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        var command = new ResetPasswordCommand(
+            request.Token,
+            request.NewPassword
+        );
+
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { error = result.Error });
+        }
+
+        return Ok(new { message = result.Data });
+    }
+
 
     [HttpPost("login/verify-2fa")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -304,101 +361,4 @@ public class AuthController : ControllerBase
         return result.IsSuccess ? Ok(new { message = result.Data }) : BadRequest(new { error = result.Error });
     }
 
-    
-    /// <summary>
-    /// Login with email and password
-    /// </summary>
-    [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
-    {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
-
-        var command = new LoginCommand(
-            request.Email,
-            request.Password,
-            request.RememberMe,
-            ipAddress,
-            userAgent
-        );
-
-        var result = await _mediator.Send(command);
-
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new { error = result.Error });
-        }
-        return Ok(result.Data);
-       
-    }
-
-
-    /// <summary>
-    /// Request password reset email
-    /// </summary>
-    [HttpPost("forgot-password")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
-    {
-        var command = new ForgotPasswordCommand(request.Email);
-        var result = await _mediator.Send(command);
-
-        return Ok(new { message = result.Data });
-    }
-
-    /// <summary>
-    /// Reset password with token
-    /// </summary>
-    [HttpPost("reset-password")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
-    {
-        var command = new ResetPasswordCommand(
-            request.Token,
-            request.NewPassword
-        );
-
-        var result = await _mediator.Send(command);
-
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new { error = result.Error });
-        }
-
-        return Ok(new { message = result.Data });
-    }
-
-
-
-    /// <summary>
-    /// TODO:: Authenticate with Google OAuth
-    /// </summary>
-    //[HttpPost("google")]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthRequest request)
-    //{
-    //    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-    //    var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
-
-    //    var command = new GoogleAuthCommand(
-    //        request.GoogleToken,
-    //        request.Role,
-    //        ipAddress,
-    //        userAgent
-    //    );
-
-    //    var result = await _mediator.Send(command);
-
-    //    if (!result.IsSuccess)
-    //    {
-    //        return BadRequest(new { error = result.Error });
-    //    }
-
-    //    return Ok(result.Data);
-    //}
 }
-
