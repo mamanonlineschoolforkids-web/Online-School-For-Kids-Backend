@@ -1,6 +1,7 @@
 ﻿using Domain.Entities.Content.Leaderboard;
 using Domain.Enums.Content;
 using Domain.Interfaces.Repositories.Content;
+using Domain.Interfaces.Repositories.Users;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -16,15 +17,21 @@ namespace Application.Commands.Leaderboard
     {
         private readonly IUserPointsRepository _userPointsRepo;
         private readonly IPointTransactionRepository _transactionRepo;
+        private readonly IUserRepository _userRepo;
+        private readonly IMediator _mediator;
         private readonly ILogger<AwardPointsHandler> _logger;
 
         public AwardPointsHandler(
             IUserPointsRepository userPointsRepo,
             IPointTransactionRepository transactionRepo,
+            IUserRepository userRepo,
+            IMediator mediator,
             ILogger<AwardPointsHandler> logger)
         {
             _userPointsRepo = userPointsRepo;
             _transactionRepo = transactionRepo;
+            _userRepo = userRepo;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -33,7 +40,12 @@ namespace Application.Commands.Leaderboard
             try
             {
                 var dto = request.Dto;
-
+                var user = await _userRepo.GetByIdAsync(dto.UserId, ct);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found: {UserId}", dto.UserId);
+                    return false;
+                }
                 // Get or create user points
                 var userPoints = await _userPointsRepo.GetOneAsync(
                     up => up.UserId == dto.UserId,
@@ -44,10 +56,13 @@ namespace Application.Commands.Leaderboard
                     userPoints = new UserPoints
                     {
                         UserId = dto.UserId,
-                        UserName = "",
+                        UserName = user.FullName,
                         TotalPoints = dto.Points,
                         WeeklyPoints = dto.Points,
-                        MonthlyPoints = dto.Points
+                        MonthlyPoints = dto.Points,                   
+                        UserAvatar = user.ProfilePictureUrl,             
+                        CoursesCompleted = dto.Reason == "CourseCompleted" ? 1 : 0, 
+                    
                     };
                     await _userPointsRepo.CreateAsync(userPoints, ct);
                 }
@@ -56,6 +71,11 @@ namespace Application.Commands.Leaderboard
                     userPoints.TotalPoints += dto.Points;
                     userPoints.WeeklyPoints += dto.Points;
                     userPoints.MonthlyPoints += dto.Points;
+                    if (dto.Reason == "CourseCompleted")
+                    {
+                        userPoints.CoursesCompleted++;
+                    }
+
                     await _userPointsRepo.UpdateAsync(userPoints.Id, userPoints, ct);
                 }
 
@@ -70,7 +90,16 @@ namespace Application.Commands.Leaderboard
                 };
 
                 await _transactionRepo.CreateAsync(transaction, ct);
+                var newBadges = await _mediator.Send(
+                    new CheckAndAwardBadgesCommand { UserId = dto.UserId },
+                    ct);
 
+                if (newBadges.Any())
+                {
+                    _logger.LogInformation(
+                        "User {UserId} earned {Count} new badges: {Badges}",
+                        dto.UserId, newBadges.Count, string.Join(", ", newBadges));
+                }
                 _logger.LogInformation("Points awarded: {Points} to User {UserId} for {Reason}",
                     dto.Points, dto.UserId, dto.Reason);
 

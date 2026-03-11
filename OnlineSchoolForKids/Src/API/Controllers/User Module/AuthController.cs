@@ -78,34 +78,7 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { message = result.Data });
-    }
-
-    
-    [HttpPost("login")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
-    {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
-
-        var command = new LoginCommand(
-            request.Email,
-            request.Password,
-            request.RememberMe,
-            ipAddress,
-            userAgent
-        );
-
-        var result = await _mediator.Send(command);
-
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new { error = result.Error });
-        }
-
-        return Ok(result.Data);
-    }
+    } 
 
     [HttpPost("login/verify-2fa")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -124,36 +97,6 @@ public class AuthController : ControllerBase
         return Ok(result.Data);
     }
 
-
-    [HttpPost("forgot-password")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
-    {
-        var command = new ForgotPasswordCommand(request.Email);
-        var result = await _mediator.Send(command);
-
-        return Ok(new { message = result.Data });
-    }
-
-    [HttpPost("reset-password")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
-    {
-        var command = new ResetPasswordCommand(
-            request.Token,
-            request.NewPassword
-        );
-
-        var result = await _mediator.Send(command);
-
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new { error = result.Error });
-        }
-
-        return Ok(new { message = result.Data });
-    }
 
 
     [HttpPost("refresh-token")]
@@ -360,7 +303,6 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(new Disable2FACommand(UserId, req.Code), ct);
         return result.IsSuccess ? Ok(new { message = result.Data }) : BadRequest(new { error = result.Error });
     }
-<<<<<<< HEAD
 
     
     /// <summary>
@@ -430,101 +372,33 @@ public class AuthController : ControllerBase
     }
 
 
-    /// <summary>
-    /// Refresh access token using refresh token
-    /// </summary>
-    [HttpPost("refresh-token")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
-    {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-
-        var command = new RefreshTokenCommand(request.RefreshToken, ipAddress);
-        var result = await _mediator.Send(command);
-
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new { error = result.Error });
-        }
-
-        return Ok(result.Data);
-    }
-
-    /// <summary>
-    /// LogOut
-    /// </summary>
-    [HttpPost("logout")]
-    [Authorize]
-    public async Task<IActionResult> Logout()
-    {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { message = "Invalid user." });
-
-        var result = await _mediator.Send(
-            new LogOutCommand(userId));
-
-        if (!result.IsSuccess)
-            return BadRequest(new { error = result.Error });
-
-        return Ok(new { message = result.Data });
-    }
-
 
     /// <summary>
     /// TODO:: Authenticate with Google OAuth
     /// </summary>
-    [HttpPost("google")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthRequest request)
-    {
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+    //[HttpPost("google")]
+    //[ProducesResponseType(StatusCodes.Status200OK)]
+    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+    //public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthRequest request)
+    //{
+    //    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+    //    var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
-        var command = new GoogleAuthCommand(
-            request.GoogleToken,
-            request.Role,
-            ipAddress,
-            userAgent
-        );
+    //    var command = new GoogleAuthCommand(
+    //        request.GoogleToken,
+    //        request.Role,
+    //        ipAddress,
+    //        userAgent
+    //    );
 
-        var result = await _mediator.Send(command);
+    //    var result = await _mediator.Send(command);
 
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new { error = result.Error });
-        }
+    //    if (!result.IsSuccess)
+    //    {
+    //        return BadRequest(new { error = result.Error });
+    //    }
 
-        return Ok(result.Data);
-    }
-
-    /// <summary>
-    /// Get current user info (requires authentication)
-    /// </summary>
-    [HttpGet("me")]
-    [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public IActionResult GetCurrentUser()
-    {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
-        var name = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
-        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-
-        return Ok(new
-        {
-            id = userId,
-            email,
-            fullName = name,
-            role
-        });
-    }
-
-=======
->>>>>>> b47706daa94dce8b20cea5c7afc625d8e2785891
+    //    return Ok(result.Data);
+    //}
 }
 

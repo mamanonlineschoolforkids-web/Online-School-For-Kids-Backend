@@ -1,6 +1,5 @@
-﻿using Domain.Entities.Content.Leaderboard;
-using Domain.Interfaces.Repositories;
-using Domain.Interfaces.Repositories.Content;
+﻿using Domain.Interfaces.Repositories.Content;
+using Domain.Interfaces.Repositories.Users;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -104,14 +103,17 @@ namespace Application.Queries
 
     public class GetLeaderboardHandler : IRequestHandler<GetLeaderboardQuery, LeaderboardDto>
     {
-        private readonly IGenericRepository<UserPoints> _userPointsRepo;
+        private readonly IUserPointsRepository _userPointsRepo;
+        private readonly IUserRepository _userRepo;
         private readonly ILogger<GetLeaderboardHandler> _logger;
 
         public GetLeaderboardHandler(
-            IGenericRepository<UserPoints> userPointsRepo,
+            IUserPointsRepository userPointsRepo,
+            IUserRepository userRepo,
             ILogger<GetLeaderboardHandler> logger)
         {
             _userPointsRepo = userPointsRepo;
+            _userRepo = userRepo;
             _logger = logger;
         }
 
@@ -120,7 +122,8 @@ namespace Application.Queries
             try
             {
                 var allUsers = await _userPointsRepo.GetAllAsync(_ => true, ct);
-
+                var users = await _userRepo.GetAllAsync(_ => true, ct);
+                var userDict = users.ToDictionary(u => u.Id, u => new { u.FullName, u.ProfilePictureUrl });
                 // Sort based on period
                 var sortedUsers = request.Period switch
                 {
@@ -128,24 +131,35 @@ namespace Application.Queries
                     "ThisMonth" => allUsers.OrderByDescending(u => u.MonthlyPoints).ToList(),
                     _ => allUsers.OrderByDescending(u => u.TotalPoints).ToList()
                 };
-
-                var entries = sortedUsers.Take(request.Limit).Select((user, index) => new LeaderboardEntryDto
+                var entries = sortedUsers.Take(request.Limit).Select((user, index) =>
                 {
-                    Rank = index + 1,
-                    UserId = user.UserId,
-                    UserName = user.UserName,
-                    UserAvatar = user.UserAvatar,
-                    Points = request.Period switch
+  
+                var userName = userDict.ContainsKey(user.UserId)
+                    ? userDict[user.UserId].FullName
+                    : user.UserName; // Fallback to stored name
+
+                var userAvatar = userDict.ContainsKey(user.UserId)
+                    ? userDict[user.UserId].ProfilePictureUrl
+                    : user.UserAvatar; // Fallback to stored avatar
+
+                    return new LeaderboardEntryDto
                     {
-                        "ThisWeek" => user.WeeklyPoints,
-                        "ThisMonth" => user.MonthlyPoints,
-                        _ => user.TotalPoints
-                    },
-                    Streak = user.CurrentStreak,
-                    CoursesCompleted = user.CoursesCompleted,
-                    BadgesCount = user.BadgesEarned.Count,
-                    RankChange = user.Rank - user.PreviousRank,
-                    IsCurrentUser = user.UserId == request.UserId
+                        Rank = index + 1,
+                        UserId = user.UserId,
+                        UserName = userName,
+                        UserAvatar = user.UserAvatar,
+                        Points = request.Period switch
+                        {
+                            "ThisWeek" => user.WeeklyPoints,
+                            "ThisMonth" => user.MonthlyPoints,
+                            _ => user.TotalPoints
+                        },
+                        Streak = user.CurrentStreak,
+                        CoursesCompleted = user.CoursesCompleted,
+                        BadgesCount = user.BadgesEarned.Count,
+                        RankChange = user.Rank - user.PreviousRank,
+                        IsCurrentUser = user.UserId == request.UserId
+                    };
                 }).ToList();
 
                 var topThree = entries.Take(3).ToList();

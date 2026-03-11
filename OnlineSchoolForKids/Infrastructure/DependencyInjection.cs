@@ -64,8 +64,7 @@ public static class DependencyInjection
 
 
         services.AddMemoryCache();
-    
-
+      
         #region Repositories
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         
@@ -89,8 +88,12 @@ public static class DependencyInjection
         services.AddScoped<ICourseProgressRepository, CourseProgressRepository>();
         services.AddScoped<IBookmarkRepository, BookmarkRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
-
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ICourseRepository, CourseRepository>();
+        services.AddScoped<IUserPointsRepository, UserPointsRepository>();
         services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<IBadgeRepository, BadgeRepository>();
+        services.AddScoped<IPointTransactionRepository, PointTransactionRepository>();
         services.AddScoped<IReportedContentRepository, ReportedContentRepository>();
 
         #endregion
