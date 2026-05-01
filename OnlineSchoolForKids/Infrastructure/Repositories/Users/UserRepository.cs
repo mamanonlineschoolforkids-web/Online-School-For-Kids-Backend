@@ -128,4 +128,70 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             cancellationToken: ct);
         return result.DeletedCount > 0;
     }
+
+    public async Task<(IEnumerable<User> Items, long TotalCount)> GetSpecialistsPagedAsync(
+    string? search,
+    string? specialization,
+    decimal? minRate,
+    decimal? maxRate,
+    double? minRating,
+    string? sortBy,
+    string? sortOrder,
+    int skip,
+    int limit,
+    CancellationToken ct = default)
+    {
+        var filters = new List<FilterDefinition<User>>
+    {
+        Builders<User>.Filter.Eq(u => u.IsDeleted, false),
+        Builders<User>.Filter.Eq(u => u.Role,      UserRole.Specialist),
+        Builders<User>.Filter.Eq(u => u.Status,    UserStatus.Active),
+    };
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            filters.Add(Builders<User>.Filter.Or(
+                Builders<User>.Filter.Regex(u => u.FullName,
+                    new MongoDB.Bson.BsonRegularExpression(term, "i")),
+                Builders<User>.Filter.Regex(u => u.Bio,
+                    new MongoDB.Bson.BsonRegularExpression(term, "i")),
+                Builders<User>.Filter.Regex(u => u.ProfessionalTitle,
+                    new MongoDB.Bson.BsonRegularExpression(term, "i"))
+            ));
+        }
+
+        if (!string.IsNullOrWhiteSpace(specialization))
+            filters.Add(Builders<User>.Filter.AnyEq(u => u.ExpertiseTags, specialization));
+
+        if (minRate.HasValue)
+            filters.Add(Builders<User>.Filter.Gte(u => u.HourlyRate, minRate.Value));
+
+        if (maxRate.HasValue)
+            filters.Add(Builders<User>.Filter.Lte(u => u.HourlyRate, maxRate.Value));
+
+        if (minRating.HasValue)
+            filters.Add(Builders<User>.Filter.Gte(u => u.AverageRating, minRating.Value));
+
+        var combined = Builders<User>.Filter.And(filters);
+        var totalCount = await _collection.CountDocumentsAsync(combined, cancellationToken: ct);
+
+        var sortDef = (sortBy?.ToLower(), sortOrder?.ToLower()) switch
+        {
+            ("rating", _) => Builders<User>.Sort.Descending(u => u.AverageRating),
+            ("rate", "asc") => Builders<User>.Sort.Ascending(u => u.HourlyRate),
+            ("rate", _) => Builders<User>.Sort.Descending(u => u.HourlyRate),
+            ("experience", _) => Builders<User>.Sort.Descending(u => u.YearsOfExperience),
+            _ => Builders<User>.Sort.Descending(u => u.AverageRating),
+        };
+
+        var items = await _collection
+            .Find(combined)
+            .Sort(sortDef)
+            .Skip(skip)
+            .Limit(limit)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
 }

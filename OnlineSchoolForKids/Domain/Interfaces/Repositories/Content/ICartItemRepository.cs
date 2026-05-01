@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Content.Order;
+﻿using Domain.Entities.Content.Orders;
 
 namespace Domain.Interfaces.Repositories.Content
 {

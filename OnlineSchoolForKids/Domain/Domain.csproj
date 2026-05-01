@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="MongoDB.Bson" Version="3.6.0" />
-    <PackageReference Include="Stripe.net" Version="50.3.0" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces.Services.Shared;
+﻿using Domain.Interfaces.Repositories.Users;
+using Domain.Interfaces.Services.Shared;
 using Infrastructure.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,12 +16,14 @@ namespace Infrastructure.Services.Shared;
 public class EmailService : IEmailService
 {
     private readonly ILogger<EmailService> _logger;
+    private readonly IUserRepository _userRepository;
     private readonly EmailSettings _emailSettings;
 
-    public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger)
+    public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger , IUserRepository userRepository)
     {
         _emailSettings = emailSettings.Value;
         _logger = logger;
+        _userRepository=userRepository;
     }
 
     public async Task SendEmailAsync(string to, string subject, string body, bool isHtml = true, CancellationToken cancellationToken = default)
@@ -278,4 +281,5 @@ public class EmailService : IEmailService
 
         await SendEmailAsync(parentEmail, subject, body);
     }
+
 }

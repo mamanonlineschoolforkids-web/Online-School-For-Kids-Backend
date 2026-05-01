@@ -1,4 +1,5 @@
 ﻿using Application.Commands.Profile.Students;
+using Application.Queries.Content;
 using Application.Queries.Profile.Students;
 using Domain.Interfaces.Repositories.Users;
 using MediatR;
@@ -150,6 +151,26 @@ namespace API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-    }
 
+        [HttpGet("enrollments")]
+        [Authorize]
+        public async Task<IActionResult> GetMyEnrollments(CancellationToken ct)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { message = "User not authenticated", success = false });
+
+                var result = await _mediator.Send(
+                    new GetUserEnrollmentsQuery { UserId = userId }, ct);
+
+                return Ok(new { data = result, success = true });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred", success = false });
+            }
+        }
+    }
 }

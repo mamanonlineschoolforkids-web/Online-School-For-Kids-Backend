@@ -87,7 +87,7 @@ namespace Application.Queries.Content
             public string? LastAccessedLessonId { get; set; }
             public string? LastAccessedLessonTitle { get; set; }
             public int? VideoPosition { get; set; } // Where they left off
-            public decimal Progress { get; set; }
+            public double Progress { get; set; }
             public DateTime? LastAccessedAt { get; set; }
         }
 

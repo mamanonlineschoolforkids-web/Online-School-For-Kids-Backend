@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Content.Order;
+﻿using Domain.Entities.Content.Orders;
 using Domain.Interfaces.Repositories.Content;
 using FluentValidation;
 using MediatR;

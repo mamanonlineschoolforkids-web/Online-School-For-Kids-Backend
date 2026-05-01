@@ -2,7 +2,7 @@
 using Domain.Entities.Content;
 using Domain.Entities.Content.Calendar;
 using Domain.Entities.Content.Moderation;
-using Domain.Entities.Content.Order;
+using Domain.Entities.Content.Orders;
 using Domain.Entities.Content.Progress;
 using Domain.Entities.Content.Quiz;
 using Domain.Entities.Users;
@@ -49,6 +49,7 @@ public class MongoDbContext
     public IMongoCollection<Payment> Payments => _database.GetCollection<Payment>("payments");
     public IMongoCollection<Event> Events => _database.GetCollection<Event>("events");
     public IMongoCollection<Comment> Comments => _database.GetCollection<Comment>("comments");
+    public IMongoCollection<Coupon> Coupons => _database.GetCollection<Coupon>("coupons");
     public IMongoCollection<ReportedContent> ReportedContents => _database.GetCollection<ReportedContent>("reportedContents");
 
     public IMongoCollection<T> GetCollection<T>(string name)

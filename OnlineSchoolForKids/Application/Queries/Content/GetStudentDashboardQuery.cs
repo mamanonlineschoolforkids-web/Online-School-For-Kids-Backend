@@ -125,7 +125,7 @@ namespace Application.Queries.Content
         public string CourseTitle { get; set; } = string.Empty;
         public string CourseThumbnail { get; set; } = string.Empty;
         public string InstructorName { get; set; } = string.Empty;
-        public decimal ProgressPercentage { get; set; }
+        public double ProgressPercentage { get; set; }
         public int CompletedLessons { get; set; }
         public int TotalLessons { get; set; }
         public string TimeSpent { get; set; } = string.Empty; // Formatted: "26h 15m"
@@ -139,7 +139,7 @@ namespace Application.Queries.Content
         public int CompletedCourses { get; set; }
         public int InProgressCourses { get; set; }
         public string TotalTimeSpent { get; set; } = string.Empty;
-        public decimal AverageProgress { get; set; }
+        public double AverageProgress { get; set; }
     }
 
 }

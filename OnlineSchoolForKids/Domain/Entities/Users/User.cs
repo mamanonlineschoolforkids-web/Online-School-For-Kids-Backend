@@ -138,36 +138,6 @@ public class SocialLink
     public DateTime? UpdatedAt { get; set; }
 }
 
-public class PaymentMethod
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public PaymentMethodType Type { get; set; }
-    public bool IsDefault { get; set; } = false;
-
-    // Card-specific fields
-    public string? Last4 { get; set; }
-    public string? Brand { get; set; }
-    public int? ExpiryMonth { get; set; }
-    public int? ExpiryYear { get; set; }
-
-    // Vodafone Cash
-    public string? VodafoneNumber { get; set; }
-
-    // Instapay
-    public string? InstapayId { get; set; }
-
-    // Fawry
-    public string? FawryReferenceNumber { get; set; }
-
-    // Bank Account
-    public string? AccountHolderName { get; set; }
-    public string? BankName { get; set; }
-    public string? AccountNumber { get; set; }
-    public string? IBAN { get; set; }
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
-}
 
 public class Certification
 {
@@ -215,4 +185,78 @@ public class WorkExperience
     public string StartDate { get; set; }
     public string EndDate { get; set; }
     public bool IsCurrentRole { get; set; }
+}
+
+public class PaymentMethod
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+
+    public PaymentMethodType Type { get; set; }
+
+    public bool IsDefault { get; set; }
+
+    // ── Card ──────────────────────────────────────────────────────────────────
+    public string? Last4 { get; set; }
+    public string? Brand { get; set; }          // Visa / Mastercard
+    public int? ExpiryMonth { get; set; }
+    public int? ExpiryYear { get; set; }
+    /// <summary>Token from payment gateway (Paymob card token). Never store raw CVV.</summary>
+    public string? CardToken { get; set; }
+    public string? CardholderName { get; set; }
+
+    // ── Vodafone Cash ─────────────────────────────────────────────────────────
+    public string? VodafoneNumber { get; set; }
+
+    // ── Instapay ─────────────────────────────────────────────────────────────
+    public string? InstapayId { get; set; }     // phone or email registered with Instapay
+
+    // ── Fawry ────────────────────────────────────────────────────────────────
+    public string? FawryReferenceNumber { get; set; }
+
+    // ── Bank Account ─────────────────────────────────────────────────────────
+    public string? AccountHolderName { get; set; }
+    public string? BankName { get; set; }
+    public string? AccountNumber { get; set; }
+    public string? IBAN { get; set; }
+
+    // ── Timestamps ───────────────────────────────────────────────────────────
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // ── Computed display string (used by front-end) ───────────────────────────
+    public string DisplayInfo => Type switch
+    {
+        PaymentMethodType.Card =>
+            Last4 is not null ? $"{Brand ?? "Card"} •••• {Last4}" : "Card",
+        PaymentMethodType.VodafoneCash =>
+            VodafoneNumber is not null ? MaskPhone(VodafoneNumber) : "Vodafone Cash",
+        PaymentMethodType.Instapay =>
+            InstapayId is not null ? MaskIdentifier(InstapayId) : "Instapay",
+        PaymentMethodType.Fawry =>
+            FawryReferenceNumber is not null ? $"Fawry #{FawryReferenceNumber}" : "Fawry",
+        PaymentMethodType.BankAccount =>
+            AccountNumber is not null
+                ? $"{BankName ?? "Bank"} •••• {AccountNumber[^Math.Min(4, AccountNumber.Length)..]}"
+                : "Bank Account",
+        _ => "Payment Method"
+    };
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private static string MaskPhone(string phone)
+    {
+        if (phone.Length < 4) return phone;
+        return $"****{phone[^4..]}";
+    }
+
+    private static string MaskIdentifier(string id)
+    {
+        if (id.Contains('@'))
+        {
+            // email — mask local part
+            var parts = id.Split('@');
+            var local = parts[0];
+            var masked = local.Length <= 2 ? "**" : $"{local[0]}***{local[^1]}";
+            return $"{masked}@{parts[1]}";
+        }
+        return MaskPhone(id);
+    }
 }
