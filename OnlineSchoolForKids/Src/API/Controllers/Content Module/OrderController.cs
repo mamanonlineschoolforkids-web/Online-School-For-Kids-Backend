@@ -1,4 +1,5 @@
 ﻿using Application.Commands.Order;
+using Application.Commands.Orders;
 using Application.Queries.Content;
 using Application.Queries.GetUserOrders;
 using MediatR;
@@ -36,9 +37,11 @@ namespace API.Controllers
 
                 var command = new CreateOrderCommand
                 {
-                    UserId = userId,
-                    PaymentMethod = request.PaymentMethod,
-                    Notes = request.Notes
+                    UserId          = userId,
+                    PaymentMethodId = request.PaymentMethodId,
+                    CouponCode      = request.CouponCode,
+                    CourseIds       = request.CourseIds,
+                    Notes           = request.Notes
                 };
 
                 var result = await _mediator.Send(command);

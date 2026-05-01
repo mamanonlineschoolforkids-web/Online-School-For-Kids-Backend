@@ -9,7 +9,7 @@ namespace Domain.Entities.Content.Progress
         public string EnrollmentId { get; set; } = string.Empty;
         public int CompletedLessons { get; set; } = 0;
         public int TotalLessons { get; set; } = 0;
-        public decimal ProgressPercentage { get; set; } = 0;
+        public double ProgressPercentage { get; set; } = 0;
         public int TimeSpent { get; set; } = 0; // Total seconds
         public decimal? AverageQuizScore { get; set; }
         public DateTime? LastAccessedAt { get; set; }

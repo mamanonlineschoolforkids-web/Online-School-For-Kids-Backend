@@ -15,4 +15,5 @@ public interface IEmailService
         string parentName,
         string childName,
         string childProgressUrl);
+
 }

@@ -1,6 +1,6 @@
 ﻿using Domain.Entities.Users;
 
-namespace Domain.Entities.Content.Order
+namespace Domain.Entities.Content.Orders
 {
     public class CartItem : BaseEntity
     {

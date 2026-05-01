@@ -9,6 +9,7 @@ using Infrastructure.Repositories.Content;
 using Infrastructure.Repositories.Users;
 using Infrastructure.Services;
 using Infrastructure.Services.Shared;
+using Infrastructure.Services.Shared.Payment;
 using Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -96,6 +97,11 @@ public static class DependencyInjection
         services.AddScoped<IPointTransactionRepository, PointTransactionRepository>();
         services.AddScoped<IReportedContentRepository, ReportedContentRepository>();
 
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+
+        services.AddScoped<ICouponRepository, CouponRepository>();
+
         #endregion
 
 
@@ -111,10 +117,11 @@ public static class DependencyInjection
         services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
         services.AddScoped<IFileStorageService, FileStorageService>();
 
+        services.AddScoped<ICouponValidationService, CouponValidationService>();
 
-        services.AddScoped<IPaymentService, PaymentService>();
+
+        services.AddPaymentProcessors();
         #endregion
-
 
         #region JWT Authentication
         var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();

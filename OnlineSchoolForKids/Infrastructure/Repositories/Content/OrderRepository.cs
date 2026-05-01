@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Content.Order;
+﻿using Domain.Entities.Content.Orders;
 using Domain.Enums.Content;
 using Domain.Interfaces.Repositories.Content;
 using Infrastructure.Data;

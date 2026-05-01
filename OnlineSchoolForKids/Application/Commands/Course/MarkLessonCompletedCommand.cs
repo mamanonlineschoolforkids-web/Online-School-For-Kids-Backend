@@ -85,7 +85,7 @@ public class MarkLessonCompleteHandler : IRequestHandler<MarkLessonCompleteComma
                 ct);
 
             var completedLessons = allProgress.Count(lp => lp.IsCompleted);
-            var courseProgress = totalLessons > 0 ? (decimal)completedLessons / totalLessons * 100 : 0;
+            var courseProgress = totalLessons > 0 ? (double)completedLessons / totalLessons * 100 : 0;
             bool courseCompleted = courseProgress >= 100;
 
             // Update enrollment
@@ -137,7 +137,7 @@ public class MarkLessonCompleteHandler : IRequestHandler<MarkLessonCompleteComma
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public bool CourseCompleted { get; set; } = false;
-        public decimal CourseProgress { get; set; }
+        public double CourseProgress { get; set; }
     }
 }
 

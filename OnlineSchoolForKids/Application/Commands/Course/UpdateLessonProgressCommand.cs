@@ -117,7 +117,7 @@ public class UpdateLessonProgressHandler : IRequestHandler<UpdateLessonProgressC
                         ct);
 
                     var completedLessons = allProgress.Count(lp => lp.IsCompleted);
-                    var progressPercentage = totalLessons > 0 ? (decimal)completedLessons / totalLessons * 100 : 0;
+                    var progressPercentage = totalLessons > 0 ? (double)completedLessons / totalLessons * 100 : 0;
                     enrollment.Progress = progressPercentage;
 
                     // Check if course completed
@@ -205,6 +205,6 @@ public class UpdateLessonProgressHandler : IRequestHandler<UpdateLessonProgressC
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
-        public decimal CourseProgress { get; set; } // Overall course progress %
+        public double CourseProgress { get; set; } // Overall course progress %
     }
 }

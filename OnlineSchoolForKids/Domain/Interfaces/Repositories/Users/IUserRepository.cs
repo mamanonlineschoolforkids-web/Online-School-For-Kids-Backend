@@ -27,4 +27,16 @@ public interface IUserRepository : IGenericRepository<User>
 
     Task<bool> HardDeleteAsync(string id, CancellationToken cancellationToken = default);
 
+    Task<(IEnumerable<User> Items, long TotalCount)> GetSpecialistsPagedAsync(
+    string? search,
+    string? specialization,
+    decimal? minRate,
+    decimal? maxRate,
+    double? minRating,
+    string? sortBy,
+    string? sortOrder,
+    int skip,
+    int limit,
+    CancellationToken ct = default);
+
 }
