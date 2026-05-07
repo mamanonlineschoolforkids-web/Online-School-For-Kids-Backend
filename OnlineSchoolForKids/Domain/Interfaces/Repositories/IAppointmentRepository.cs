@@ -16,4 +16,11 @@ public interface IAppointmentRepository
     Task<IEnumerable<Appointment>> GetByStudentIdAsync(string studentId, CancellationToken ct = default);
     Task<IEnumerable<string>> GetBookedSlotsAsync(string specialistId, string date, CancellationToken ct = default);
     Task<bool> HasConflictAsync(string specialistId, string date, string startTime, string endTime, CancellationToken ct = default);
+
+
+    /// <summary>Returns all Pending appointments whose hold has expired.</summary>
+    Task<IEnumerable<Appointment>> GetExpiredPendingAsync(DateTime utcNow, CancellationToken ct = default);
+
+    /// <summary>Bulk-updates a set of appointments (used by the expiry job).</summary>
+    Task UpdateManyAsync(IEnumerable<Appointment> appointments, CancellationToken ct = default);
 }

@@ -22,7 +22,7 @@ public class MongoDbContext
         var client = new MongoClient(settings.Value.ConnectionString);
         _database = client.GetDatabase(settings.Value.DatabaseName);
 
-        //CreateIndexes();
+        CreateIndexes();
     }
 
     // User Module
@@ -31,9 +31,7 @@ public class MongoDbContext
     public IMongoCollection<Payout> Payouts => _database.GetCollection<Payout>("payouts");
 
     // Content Module
-
     public IMongoCollection<Course> Courses => _database.GetCollection<Course>("courses");
-
     public IMongoCollection<Category> Categories => GetCollection<Category>("categories");
     public IMongoCollection<Wishlist> Wishlists => _database.GetCollection<Wishlist>("wishlist");
     public IMongoCollection<CartItem> CartItems => _database.GetCollection<CartItem>("cartItems");
@@ -61,5 +59,24 @@ public class MongoDbContext
         return _database.GetCollection<T>(name);
     }
 
+    private void CreateIndexes()
+    {
+        var appts = _database.GetCollection<Appointment>("Appointments");
 
+        appts.Indexes.CreateMany(new[]
+        {
+            // Slot conflict check
+            new CreateIndexModel<Appointment>(
+                Builders<Appointment>.IndexKeys
+                    .Ascending(a => a.SpecialistId)
+                    .Ascending(a => a.AppointmentDate)
+                    .Ascending(a => a.StartTime)),
+
+            // Expiry job scan
+            new CreateIndexModel<Appointment>(
+                Builders<Appointment>.IndexKeys
+                    .Ascending(a => a.Status)
+                    .Ascending(a => a.HoldExpiresAtUtc))
+        });
+    }
 }
