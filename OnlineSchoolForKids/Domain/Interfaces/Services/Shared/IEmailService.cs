@@ -1,4 +1,6 @@
-﻿namespace Domain.Interfaces.Services.Shared;
+﻿using Domain.Entities;
+
+namespace Domain.Interfaces.Services.Shared;
 
 public interface IEmailService
 {
@@ -15,5 +17,20 @@ public interface IEmailService
         string parentName,
         string childName,
         string childProgressUrl);
+
+    Task SendBookingCancelledAsync(
+    Appointment appt,
+    string specialistEmail,
+    string studentEmail,
+    string? reason,
+    bool refundIssued,
+    CancellationToken ct = default);
+
+    Task SendBookingConfirmedAsync(
+        Appointment appt,
+        string specialistEmail, string specialistName,
+        string studentEmail, string studentName,
+        string meetLink,
+        CancellationToken ct = default);
 
 }

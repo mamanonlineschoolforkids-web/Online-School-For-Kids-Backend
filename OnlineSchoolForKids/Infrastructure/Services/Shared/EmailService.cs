@@ -1,15 +1,21 @@
-﻿using Domain.Interfaces.Repositories.Users;
+﻿using Domain.Entities;
+using Domain.Interfaces.Repositories.Users;
 using Domain.Interfaces.Services.Shared;
 using Infrastructure.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+
+// No MimeKit / MailKit imports — everything goes through System.Net.Mail,
+// which works directly with Gmail on port 587 + EnableSsl = true.
 
 namespace Infrastructure.Services.Shared;
 
@@ -19,44 +25,30 @@ public class EmailService : IEmailService
     private readonly IUserRepository _userRepository;
     private readonly EmailSettings _emailSettings;
 
-    public EmailService(IOptions<EmailSettings> emailSettings, ILogger<EmailService> logger , IUserRepository userRepository)
+    public EmailService(
+        IOptions<EmailSettings> emailSettings,
+        ILogger<EmailService> logger,
+        IUserRepository userRepository)
     {
-        _emailSettings = emailSettings.Value;
-        _logger = logger;
-        _userRepository=userRepository;
+        _emailSettings  = emailSettings.Value;
+        _logger         = logger;
+        _userRepository = userRepository;
     }
 
-    public async Task SendEmailAsync(string to, string subject, string body, bool isHtml = true, CancellationToken cancellationToken = default)
+    // ── Core delivery ─────────────────────────────────────────────────────────
+
+    public async Task SendEmailAsync(
+        string to, string subject, string body,
+        bool isHtml = true, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            using var client = new SmtpClient(_emailSettings.SmtpHost, _emailSettings.SmtpPort)
-            {
-                EnableSsl = _emailSettings.EnableSsl,
-                Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password)
-            };
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress(_emailSettings.FromEmail, _emailSettings.FromName),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = isHtml
-            };
-
-            mailMessage.To.Add(to);
-
-            await client.SendMailAsync(mailMessage, cancellationToken);
-            _logger.LogInformation("Email sent successfully to {Email}", to);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send email to {Email}", to);
-            throw;
-        }
+        await DeliverAsync(to, subject, body, isHtml, attachment: null, cancellationToken);
     }
 
-    public async Task SendVerificationEmailAsync(string to, string userName, DateTime expiry, string verificationLink, CancellationToken cancellationToken = default)
+    // ── Account emails ────────────────────────────────────────────────────────
+
+    public async Task SendVerificationEmailAsync(
+        string to, string userName, DateTime expiry, string verificationLink,
+        CancellationToken cancellationToken = default)
     {
         var subject = "Verify Your Email Address";
         var body = $@"
@@ -75,7 +67,9 @@ public class EmailService : IEmailService
         await SendEmailAsync(to, subject, body, true, cancellationToken);
     }
 
-    public async Task SendPasswordResetEmailAsync(string to, string userName, DateTime expiry, string resetLink, CancellationToken cancellationToken = default)
+    public async Task SendPasswordResetEmailAsync(
+        string to, string userName, DateTime expiry, string resetLink,
+        CancellationToken cancellationToken = default)
     {
         var subject = "Reset Your Password";
         var body = $@"
@@ -101,12 +95,14 @@ public class EmailService : IEmailService
             <h2>Password Changed</h2>
             <p>Your password has been changed successfully.</p>
             <p>If you didn't make this change, please contact our support team immediately.</p>
-            <p>Time: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC</p>
-        ";
+            <p>Time: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC</p>";
 
         await SendEmailAsync(email, subject, body);
     }
-    public async Task SendWelcomeEmailAsync(string to, string userName, CancellationToken cancellationToken = default)
+
+    public async Task SendWelcomeEmailAsync(
+        string to, string userName,
+        CancellationToken cancellationToken = default)
     {
         var subject = "Welcome to Our Platform!";
         var body = $@"
@@ -123,7 +119,9 @@ public class EmailService : IEmailService
         await SendEmailAsync(to, subject, body, true, cancellationToken);
     }
 
-    public async Task SendParentLinkInvitationAsync(string childEmail, string childName, string parentName, string inviteLink, CancellationToken cancellationToken = default)
+    public async Task SendParentLinkInvitationAsync(
+        string childEmail, string childName, string parentName, string inviteLink,
+        CancellationToken cancellationToken = default)
     {
         var subject = "Parent Invitation";
         var body = $@"
@@ -141,7 +139,9 @@ public class EmailService : IEmailService
         await SendEmailAsync(childEmail, subject, body, true, cancellationToken);
     }
 
-    public async Task SendParentLinkedNotificationAsync(string childEmail, string childName, string parentName, CancellationToken cancellationToken = default)
+    public async Task SendParentLinkedNotificationAsync(
+        string childEmail, string childName, string parentName,
+        CancellationToken cancellationToken = default)
     {
         var subject = "Student Invitation Acceptance";
         var body = $@"
@@ -158,87 +158,31 @@ public class EmailService : IEmailService
     }
 
     public async Task SendParentLinkAcceptedNotificationAsync(
-    string parentEmail,
-    string parentName,
-    string childName,
-    string childProgressUrl)
+        string parentEmail, string parentName,
+        string childName, string childProgressUrl)
     {
         var subject = $"{childName} accepted your parent link invitation!";
-
         var body = $@"
         <html>
         <head>
             <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }}
-                .header {{
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 30px;
-                    text-align: center;
-                    border-radius: 10px 10px 0 0;
-                }}
-                .content {{
-                    background: #f9fafb;
-                    padding: 30px;
-                    border-radius: 0 0 10px 10px;
-                }}
-                .success-badge {{
-                    background: #10b981;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 20px;
-                    display: inline-block;
-                    margin: 20px 0;
-                    font-weight: bold;
-                }}
-                .button {{
-                    display: inline-block;
-                    background: #667eea;
-                    color: white;
-                    padding: 12px 30px;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    margin: 20px 0;
-                }}
-                .info-box {{
-                    background: #e0e7ff;
-                    border-left: 4px solid #667eea;
-                    padding: 15px;
-                    margin: 20px 0;
-                    border-radius: 5px;
-                }}
-                .footer {{
-                    text-align: center;
-                    color: #6b7280;
-                    font-size: 12px;
-                    margin-top: 30px;
-                }}
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .content {{ background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .success-badge {{ background: #10b981; color: white; padding: 10px 20px; border-radius: 20px; display: inline-block; margin: 20px 0; font-weight: bold; }}
+                .button {{ display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                .info-box {{ background: #e0e7ff; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 5px; }}
+                .footer {{ text-align: center; color: #6b7280; font-size: 12px; margin-top: 30px; }}
             </style>
         </head>
         <body>
             <div class='container'>
-                <div class='header'>
-                    <h1>🎉 Great News!</h1>
-                </div>
+                <div class='header'><h1>🎉 Great News!</h1></div>
                 <div class='content'>
                     <div class='success-badge'>✓ Account Linked Successfully</div>
-                    
                     <p>Dear {parentName},</p>
-                    
-                    <p>
-                        We're excited to let you know that <strong>{childName}</strong> has accepted 
-                        your parent link invitation!
-                    </p>
-                    
+                    <p>We're excited to let you know that <strong>{childName}</strong> has accepted your parent link invitation!</p>
                     <div class='info-box'>
                         <strong>What you can do now:</strong>
                         <ul>
@@ -248,38 +192,176 @@ public class EmailService : IEmailService
                             <li>Support their educational journey</li>
                         </ul>
                     </div>
-                    
                     <p style='text-align: center;'>
-                        <a href='{childProgressUrl}' class='button'>
-                            View {childName}'s Progress
-                        </a>
+                        <a href='{childProgressUrl}' class='button'>View {childName}'s Progress</a>
                     </p>
-                    
-                    <p>
-                        You can access {childName}'s learning dashboard anytime from your parent profile 
-                        or by clicking the link above.
-                    </p>
-                    
-                    <p>
-                        Thank you for being an active part of {childName}'s learning journey!
-                    </p>
-                    
-                    <p>
-                        Best regards,<br>
-                        <strong>The EduPlatform Team</strong>
-                    </p>
+                    <p>Thank you for being an active part of {childName}'s learning journey!</p>
+                    <p>Best regards,<br/><strong>The EduPlatform Team</strong></p>
                 </div>
-                
                 <div class='footer'>
                     <p>This is an automated notification from EduPlatform.</p>
                     <p>If you have any questions, please contact our support team.</p>
                 </div>
             </div>
         </body>
-        </html>
-    ";
+        </html>";
 
         await SendEmailAsync(parentEmail, subject, body);
     }
 
+    // ── Booking emails ────────────────────────────────────────────────────────
+
+    public async Task SendBookingConfirmedAsync(
+        Appointment appt,
+        string specialistEmail, string specialistName,
+        string studentEmail, string studentName,
+        string meetLink,
+        CancellationToken ct = default)
+    {
+        var dateStr = DateTime.Parse(appt.AppointmentDate)
+            .ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture);
+        var timeStr = $"{appt.StartTime} – {appt.EndTime} UTC";
+
+        var icsBytes = BuildIcs(appt, specialistName, meetLink);
+
+        var studentBody = $@"
+            <h2>Your session is confirmed! 🎉</h2>
+            <p><strong>Session:</strong> {appt.Title}</p>
+            <p><strong>Specialist:</strong> {specialistName}</p>
+            <p><strong>Date:</strong> {dateStr}</p>
+            <p><strong>Time:</strong> {timeStr}</p>
+            <p><strong>Join here:</strong> <a href='{meetLink}'>{meetLink}</a></p>
+            <p>The calendar invite (.ics) is attached — click it to add the session to Google Calendar, Outlook, or Apple Calendar.</p>";
+
+        var specialistBody = $@"
+            <h2>New session confirmed 📅</h2>
+            <p><strong>Student:</strong> {studentName}</p>
+            <p><strong>Session:</strong> {appt.Title}</p>
+            <p><strong>Date:</strong> {dateStr}</p>
+            <p><strong>Time:</strong> {timeStr}</p>
+            <p><strong>Join here:</strong> <a href='{meetLink}'>{meetLink}</a></p>
+            <p>The calendar invite (.ics) is attached.</p>";
+
+        var icsAttachment = BuildIcsAttachment(icsBytes);
+
+        await DeliverAsync(studentEmail, $"Session confirmed: {appt.Title}", studentBody, isHtml: true, icsAttachment, ct);
+        await DeliverAsync(specialistEmail, $"New session: {appt.Title}", specialistBody, isHtml: true, icsAttachment, ct);
+    }
+
+    public async Task SendBookingCancelledAsync(
+        Appointment appt,
+        string specialistEmail,
+        string studentEmail,
+        string? reason,
+        bool refundIssued,
+        CancellationToken ct = default)
+    {
+        var dateStr = DateTime.Parse(appt.AppointmentDate)
+            .ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture);
+
+        var refundLine = refundIssued
+            ? "<p>✅ A full refund has been issued to your original payment method.</p>"
+            : "";
+
+        var reasonLine = !string.IsNullOrWhiteSpace(reason)
+            ? $"<p><strong>Reason:</strong> {reason}</p>"
+            : "";
+
+        var body = $@"
+            <h2>Session cancelled</h2>
+            <p><strong>Session:</strong> {appt.Title}</p>
+            <p><strong>Date:</strong> {dateStr} at {appt.StartTime} UTC</p>
+            {reasonLine}
+            {refundLine}";
+
+        await SendEmailAsync(studentEmail, $"Session cancelled: {appt.Title}", body, true, ct);
+        await SendEmailAsync(specialistEmail, $"Session cancelled: {appt.Title}", body, true, ct);
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Single SMTP delivery point. Accepts an optional System.Net.Mail.Attachment
+    /// (used for .ics files). All other emails pass null.
+    /// </summary>
+    private async Task DeliverAsync(
+        string to, string subject, string body, bool isHtml,
+        Attachment? attachment, CancellationToken ct)
+    {
+        try
+        {
+            using var smtpClient = new SmtpClient(_emailSettings.SmtpHost, _emailSettings.SmtpPort)
+            {
+                EnableSsl   = _emailSettings.EnableSsl,
+                Credentials = new NetworkCredential(_emailSettings.Username, _emailSettings.Password)
+            };
+
+            using var message = new MailMessage
+            {
+                From       = new MailAddress(_emailSettings.FromEmail, _emailSettings.FromName),
+                Subject    = subject,
+                Body       = body,
+                IsBodyHtml = isHtml,
+            };
+
+            message.To.Add(to);
+
+            if (attachment is not null)
+                message.Attachments.Add(attachment);
+
+            await smtpClient.SendMailAsync(message, ct);
+
+            _logger.LogInformation(
+                "Email sent to {To} — subject: {Subject}", to, subject);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to send email to {To} — subject: {Subject}", to, subject);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Wraps raw .ics bytes in a System.Net.Mail.Attachment
+    /// with the correct text/calendar MIME type.
+    /// </summary>
+    private static Attachment BuildIcsAttachment(byte[] icsBytes)
+    {
+        var stream = new MemoryStream(icsBytes);
+        var contentType = new ContentType("text/calendar")
+        {
+            Name       = "session.ics",
+            Parameters = { { "method", "REQUEST" } }
+        };
+
+        return new Attachment(stream, contentType);
+    }
+
+    /// <summary>Builds a minimal RFC 5545 .ics calendar invite for a session.</summary>
+    private static byte[] BuildIcs(Appointment appt, string specialistName, string meetLink)
+    {
+        var dtStart = DateTime.Parse($"{appt.AppointmentDate}T{appt.StartTime}:00")
+            .ToUniversalTime().ToString("yyyyMMddTHHmmssZ");
+        var dtEnd = DateTime.Parse($"{appt.AppointmentDate}T{appt.EndTime}:00")
+            .ToUniversalTime().ToString("yyyyMMddTHHmmssZ");
+        var now = DateTime.UtcNow.ToString("yyyyMMddTHHmmssZ");
+
+        var ics = $@"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//LearningPlatform//EN
+METHOD:REQUEST
+BEGIN:VEVENT
+UID:{appt.Id}@learningplatform
+DTSTAMP:{now}
+DTSTART:{dtStart}
+DTEND:{dtEnd}
+SUMMARY:{appt.Title} with {specialistName}
+DESCRIPTION:Join the Google Meet here: {meetLink}
+URL:{meetLink}
+END:VEVENT
+END:VCALENDAR";
+
+        return Encoding.UTF8.GetBytes(ics);
+    }
 }

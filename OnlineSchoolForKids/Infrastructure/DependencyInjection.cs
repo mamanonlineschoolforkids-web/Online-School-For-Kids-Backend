@@ -102,6 +102,12 @@ public static class DependencyInjection
 
         services.AddScoped<ICouponRepository, CouponRepository>();
 
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.Configure<GoogleMeetOptions>(configuration.GetSection("GoogleMeet"));
+        services.AddScoped<IGoogleMeetService,GoogleMeetService>();
+
+        services.AddHostedService<BackgroundJobs.AppointmentExpiryJob>();
+
         #endregion
 
 
