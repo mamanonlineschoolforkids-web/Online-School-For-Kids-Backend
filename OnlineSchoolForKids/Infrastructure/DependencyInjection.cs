@@ -102,6 +102,8 @@ public static class DependencyInjection
 
         services.AddScoped<ICouponRepository, CouponRepository>();
 
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+
         #endregion
 
 

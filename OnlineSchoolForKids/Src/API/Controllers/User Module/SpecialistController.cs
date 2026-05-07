@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Application.Commands.Profile.Specialists;
+﻿using Application.Commands.Profile.Specialists;
 using Application.Queries.Profile.Specialists;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace API.Controllers.User_Module;
@@ -51,5 +51,26 @@ public class SpecialistController : ControllerBase
     {
         await _mediator.Send(new UpdateSessionRatesCommand(UserId, dto.HourlyRate), ct);
         return NoContent();
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetSpecialists(
+    [FromQuery] string? search = null,
+    [FromQuery] string? specialization = null,
+    [FromQuery] decimal? minRate = null,
+    [FromQuery] decimal? maxRate = null,
+    [FromQuery] double? minRating = null,
+    [FromQuery] string? sortBy = null,   // rating | rate | experience
+    [FromQuery] string? sortOrder = null,   // asc | desc
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 12,
+    CancellationToken ct = default)
+    {
+        var result = await _mediator.Send(new GetSpecialistsQuery(
+            search, specialization, minRate, maxRate,
+            minRating, sortBy, sortOrder, page, pageSize), ct);
+
+        return Ok(result);
     }
 }

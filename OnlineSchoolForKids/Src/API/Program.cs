@@ -130,5 +130,7 @@ var cleanupTimer = new Timer(_ =>
 
 await SuperAdminSeeder.SeedAsync(app);
 await CourseSeeder.SeedAsync(app);
+await SpecialistSeeder.SeedAsync(app);
+
 
 app.Run();
