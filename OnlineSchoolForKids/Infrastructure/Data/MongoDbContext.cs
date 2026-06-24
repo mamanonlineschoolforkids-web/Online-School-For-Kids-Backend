@@ -6,6 +6,7 @@ using Domain.Entities.Content.Moderation;
 using Domain.Entities.Content.Orders;
 using Domain.Entities.Content.Progress;
 using Domain.Entities.Content.Quiz;
+using Domain.Entities.Feed;
 using Domain.Entities.Users;
 using Infrastructure.Settings;
 using Microsoft.Extensions.Options;
@@ -53,6 +54,15 @@ public class MongoDbContext
     public IMongoCollection<UserPoints> UserPoints => _database.GetCollection<UserPoints>("userPoints");
     public IMongoCollection<Badge> Badges => _database.GetCollection<Badge>("badges");
     public IMongoCollection<PointTransaction> PointTransactions => _database.GetCollection<PointTransaction>("pointTransactions");
+
+
+    public IMongoCollection<Post> Posts => _database.GetCollection<Post>("posts");
+   public IMongoCollection<PostReaction> PostReactions => _database.GetCollection<PostReaction>("postReactions");
+   public IMongoCollection<PostComment> PostComments => _database.GetCollection<PostComment>("postComments");
+
+    public IMongoCollection<VideoProcessingJob> VideoProcessingJobs =>
+     _database.GetCollection<VideoProcessingJob>("videoProcessingJobs");
+
 
     public IMongoCollection<T> GetCollection<T>(string name)
     {

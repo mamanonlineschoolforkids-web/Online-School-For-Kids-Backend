@@ -1,5 +1,6 @@
 ﻿using Application.Commands;
 using Application.Commands.Course;
+using Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +26,27 @@ namespace API.Controllers
         {
             _mediator = mediator;
             _logger = logger;
+        }
+
+
+        [HttpGet("courses/mine")]
+        public async Task<IActionResult> GetMyCourses(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null) return Unauthorized();
+
+                var query = new GetMyCoursesQuery { InstructorId = userId };
+                var result = await _mediator.Send(query, cancellationToken);
+
+                return Ok(new { data = result, success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting instructor's courses");
+                return StatusCode(500, new { message = "An error occurred", success = false });
+            }
         }
 
         [HttpPost("courses")]
@@ -338,6 +360,43 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error adding material");
+                return StatusCode(500, new { message = "An error occurred", success = false });
+            }
+        }
+
+        
+
+        /// <summary>
+        /// Full course detail (sections + lessons) for the instructor's course
+        /// management page. Works for draft/unpublished courses, unlike the
+        /// public GetCourseById endpoint.
+        /// GET /api/coursecreator/courses/{courseId}/management
+        /// </summary>
+        [HttpGet("courses/{courseId}/management")]
+        public async Task<IActionResult> GetCourseManagementDetail(
+            string courseId,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId == null) return Unauthorized();
+
+                var query = new GetCourseManagementDetailQuery
+                {
+                    CourseId = courseId,
+                    InstructorId = userId
+                };
+                var result = await _mediator.Send(query, cancellationToken);
+
+                if (result == null)
+                    return NotFound(new { message = "Course not found", success = false });
+
+                return Ok(new { data = result, success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting course management detail");
                 return StatusCode(500, new { message = "An error occurred", success = false });
             }
         }

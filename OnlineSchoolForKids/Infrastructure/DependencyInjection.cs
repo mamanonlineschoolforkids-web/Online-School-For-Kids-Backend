@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces.Repositories;
+﻿using Application.Services;
+using Domain.Interfaces.Repositories;
 using Domain.Interfaces.Repositories.Content;
 using Domain.Interfaces.Repositories.Users;
 using Domain.Interfaces.Services;
@@ -47,19 +48,26 @@ public static class DependencyInjection
 
 
         #region Redis
-        var redisConnection = configuration.GetConnectionString("Redis");
+        //var redisConnection = configuration.GetConnectionString("Redis");
 
-        if (!string.IsNullOrEmpty(redisConnection))
-        {
-            services.AddSingleton<IConnectionMultiplexer>(sp =>
-            {
-                var config = ConfigurationOptions.Parse(redisConnection);
-                config.AbortOnConnectFail = false; // ← Don't crash if Redis is down
-                config.ConnectRetry = 3;
-                config.ConnectTimeout = 5000;
-                return ConnectionMultiplexer.Connect(config);
-            });
-        }
+        //if (!string.IsNullOrEmpty(redisConnection))
+        //{
+        //    services.AddSingleton<IConnectionMultiplexer>(sp =>
+        //    {
+        //        var config = ConfigurationOptions.Parse(redisConnection);
+        //        config.AbortOnConnectFail = false; // ← Don't crash if Redis is down
+        //        config.ConnectRetry = 3;
+        //        config.ConnectTimeout = 5000;
+        //        return ConnectionMultiplexer.Connect(config);
+        //    });
+        //}
+        #endregion
+
+        #region Redis
+        services.AddSingleton(new UpstashRedisClient(
+            configuration["Upstash:Url"]!,
+            configuration["Upstash:Token"]!
+        ));
         #endregion
 
 
@@ -108,6 +116,15 @@ public static class DependencyInjection
 
         services.AddHostedService<BackgroundJobs.AppointmentExpiryJob>();
 
+        services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<IPostReactionRepository, PostReactionRepository>();
+        services.AddScoped<IPostCommentRepository, PostCommentRepository>();
+        services.AddScoped<IFollowRepository, FollowRepository>();
+
+
+
+   
+
         #endregion
 
 
@@ -125,6 +142,10 @@ public static class DependencyInjection
 
         services.AddScoped<ICouponValidationService, CouponValidationService>();
 
+        services.AddScoped<IVideoProcessingJobRepository, VideoProcessingJobRepository>();
+
+
+        services.AddScoped<IFeedService, FeedService>();
 
         services.AddPaymentProcessors();
         #endregion

@@ -76,14 +76,14 @@ policy.WithOrigins(
 #region Files
 builder.Services.Configure<FormOptions>(options =>
 {
-options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB max
+options.MultipartBodyLengthLimit = 1000 * 1024 * 1024; // 10MB max
 options.ValueLengthLimit = int.MaxValue;
 options.MultipartHeadersLengthLimit = int.MaxValue;
 });
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+    serverOptions.Limits.MaxRequestBodySize = 1000 * 1024 * 1024; // 10MB
 }); 
 #endregion
 
@@ -110,7 +110,7 @@ if (app.Environment.IsDevelopment())
 
 // Custom middleware
 app.UseGlobalExceptionHandler();
-app.UseRateLimiting(requestLimit: 100, timeWindowSeconds: 60);
+//app.UseRateLimiting(requestLimit: 100, timeWindowSeconds: 60);
 
 app.UseHttpsRedirection();
 
@@ -129,7 +129,7 @@ var cleanupTimer = new Timer(_ =>
 }, null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
 
 await SuperAdminSeeder.SeedAsync(app);
-await CourseSeeder.SeedAsync(app);
+//await CourseSeeder.SeedAsync(app);
 await SpecialistSeeder.SeedAsync(app);
 
 

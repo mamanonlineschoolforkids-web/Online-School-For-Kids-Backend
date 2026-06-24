@@ -181,7 +181,8 @@ namespace API.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (String.IsNullOrEmpty(userId)) { 
+                if (String.IsNullOrEmpty(userId))
+                {
                     return Unauthorized(new { message = "User not authenticated", success = false });
                 }
                 var cart = await _mediator.Send(new GetCartQuery { UserId = userId });

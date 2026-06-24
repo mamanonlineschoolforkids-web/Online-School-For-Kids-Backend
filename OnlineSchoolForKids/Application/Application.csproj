@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <Folder Include="Commands\Payments\" />
+    <Folder Include="DTOs\Feed\" />
     <Folder Include="Queries\Payments\" />
   </ItemGroup>
 

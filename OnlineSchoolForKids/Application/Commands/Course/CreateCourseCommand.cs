@@ -42,6 +42,7 @@ namespace Application.Commands
                     Price = dto.Price,
                     ThumbnailUrl = dto.ThumbnailUrl ?? "",
                     IsPublished = false,
+                    InstructorId = request.InstructorId, // ← ADD THIS LINE
                     Sections = new List<Section>()
                 };
 
@@ -69,9 +70,7 @@ namespace Application.Commands
                 _logger.LogError(ex, "Error creating course");
                 return null;
             }
-
         }
-    
     }
     public class UpdateCourseCommand : IRequest<bool>
     {
